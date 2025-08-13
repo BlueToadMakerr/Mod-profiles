@@ -25,3 +25,6 @@ Access Denabler through the convenient button in the main menu's bottom bar. Cli
 - **Advanced Settings**: More granular control over which mods get affected
 
 By default, there's an option in settings to also disable the main mod if you really want to go completely vanilla.
+
+
+Also i can't do good logos :sob:
