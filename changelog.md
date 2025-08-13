@@ -1,3 +1,5 @@
+## [1.0.1]
+- **Fixed mod id issues**
 ## [1.0.0] - Initial Release
 ### ✨ New Features
 - **One-Click Mod Management**: Disable or enable all mods instantly with a single button
