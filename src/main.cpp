@@ -45,7 +45,7 @@ protected:
                 continue;
             }
             
-            if (mod->getID() == "dulak.all-mods" && !disableSelf) {
+            if (mod->getID() == "dulak.denabler" && !disableSelf) {
                 continue;
             }
             
@@ -120,7 +120,7 @@ class $modify(MyMenuLayer, MenuLayer) {
             return false;
         }
 
-        log::debug("All-Mods: MenuLayer initialized with {} children.", this->getChildrenCount());
+        log::debug("Denabler: MenuLayer initialized with {} children.", this->getChildrenCount());
 
         auto modButton = CCMenuItemSpriteExtra::create(
             CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png"),
