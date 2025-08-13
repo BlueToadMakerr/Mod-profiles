@@ -1,0 +1,26 @@
+{
+	"geode": "4.7.0",
+	"gd": {
+		"win": "2.2074",
+		"android": "2.2074",
+		"mac": "2.2074",
+		"ios": "2.2074"
+	},
+	"id": "dulak.denabler",
+	"name": "Denabler",
+	"version": "v1.0.0",
+	"developer": "Dulak",
+	"description": "Bulk enable/disable all mods at once",
+	"links": {
+		"source": "https://github.com/dulakgg/Denabler"
+	},
+	"tags": ["utility", "interface", "enhancement"],
+	"settings": {
+		"disable-self": {
+			"type": "bool",
+			"name": "Also Disable Denabler",
+			"description": "When disabling all mods, also disable Denabler itself (you won't be able to enable mods again until you manually re-enable Denabler)",
+			"default": false
+		}
+	}
+}
