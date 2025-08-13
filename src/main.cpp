@@ -185,7 +185,7 @@ class $modify(MyMenuLayer, MenuLayer) {
                 continue;
             }
             
-            if (mod->getID() == "dulak.all-mods" && !disableSelf) {
+            if (mod->getID() == "dulak.denabler" && !disableSelf) {
                 continue;
             }
             
