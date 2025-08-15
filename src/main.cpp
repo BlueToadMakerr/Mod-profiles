@@ -5,28 +5,42 @@
 using namespace geode::prelude;
 
 class ModManagerPopup : public Popup<> {
+    float m_w = 320.f;
+    float m_h = 160.f;
 protected:
     bool setup() override {
         this->setTitle("Denabler - Mod Manager");
-        
-        
+
         auto disableBtn = CCMenuItemSpriteExtra::create(
-            ButtonSprite::create("Disable All", "goldFont.fnt", "GJ_button_01.png", 0.8f),
+            ButtonSprite::create("Disable All", "goldFont.fnt", "GJ_button_01.png", 1.0f),
             this,
             menu_selector(ModManagerPopup::onDisableAll)
         );
         
         auto enableBtn = CCMenuItemSpriteExtra::create(
-            ButtonSprite::create("Enable All", "goldFont.fnt", "GJ_button_01.png", 0.8f),
+            ButtonSprite::create("Enable All", "goldFont.fnt", "GJ_button_01.png", 1.0f),
             this,
             menu_selector(ModManagerPopup::onEnableAll)
         );
-        
+
+    float margin = m_w * 0.06f;
+    if (margin < 12.f) margin = 12.f; else if (margin > 40.f) margin = 40.f;
+    float available = m_w - (margin * 2);
+    if (available < 80.f) available = 80.f;
+    float gap = m_w * 0.05f;
+    if (gap < 12.f) gap = 12.f; else if (gap > 30.f) gap = 30.f;
+    float btnW = disableBtn->getContentSize().width;
+    float combined = (btnW * 2.f) + gap;
+    float scale = available / combined;
+    if (scale > 1.f) scale = 1.f; else if (scale < 0.5f) scale = 0.5f;
+        disableBtn->setScale(scale);
+        enableBtn->setScale(scale);
+
         auto menu = CCMenu::create();
         menu->addChild(disableBtn);
         menu->addChild(enableBtn);
-        menu->setLayout(RowLayout::create()->setGap(20));
-        m_mainLayer->addChildAtPosition(menu, Anchor::Center, ccp(0, -20));
+    menu->setLayout(RowLayout::create()->setGap(gap));
+    m_mainLayer->addChildAtPosition(menu, Anchor::Center);
         
         return true;
     }
@@ -45,7 +59,7 @@ protected:
                 continue;
             }
             
-            if (mod->getID() == "dulak.denabler" && !disableSelf) {
+            if (mod->getID() == Mod::get()->getID() && !disableSelf) {
                 continue;
             }
             
@@ -104,7 +118,12 @@ protected:
 public:
     static ModManagerPopup* create() {
         auto ret = new ModManagerPopup();
-        if (ret->initAnchored(320.f, 160.f)) {
+    auto winSize = CCDirector::sharedDirector()->getWinSize();
+    float w = winSize.width * 0.75f; if (w < 320.f) w = 320.f; else if (w > 700.f) w = 700.f;
+    float h = winSize.height * 0.45f; if (h < 160.f) h = 160.f; else if (h > 420.f) h = 420.f;
+    ret->m_w = w;
+    ret->m_h = h;
+    if (ret->initAnchored(w, h)) {
             ret->autorelease();
             return ret;
         }
@@ -120,14 +139,14 @@ class $modify(MyMenuLayer, MenuLayer) {
             return false;
         }
 
-        log::debug("Denabler: MenuLayer initialized with {} children.", this->getChildrenCount());
+        log::debug("All-Mods: MenuLayer initialized with {} children.", this->getChildrenCount());
 
         auto modButton = CCMenuItemSpriteExtra::create(
             CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png"),
             this,
             menu_selector(MyMenuLayer::onModManagerButton)
         );
-        modButton->setScale(1.2f);
+    modButton->setScale(1.0f);
 
         auto bottomMenu = this->getChildByID("bottom-menu");
         if (bottomMenu) {
@@ -185,7 +204,7 @@ class $modify(MyMenuLayer, MenuLayer) {
                 continue;
             }
             
-            if (mod->getID() == "dulak.denabler" && !disableSelf) {
+            if (mod->getID() == Mod::get()->getID() && !disableSelf) {
                 continue;
             }
             
