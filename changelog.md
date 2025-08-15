@@ -1,3 +1,5 @@
+## [1.0.2]
+- **Fixed window size on some devices (hopefully)**
 ## [1.0.1]
 - **Fixed mod id issues**
 ## [1.0.0] - Initial Release
