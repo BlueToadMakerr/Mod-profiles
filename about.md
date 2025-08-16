@@ -1,6 +1,4 @@
-Here is your: 🔥💥⚡️ SKIBIDI SIGMA GYATS OHIO SIGMA — desctipion for mod denabler 💀🛠️🚀
-Flip. Dominate. No beta. Lone wolf energy. 👑🐺🤘🔥💣⚡️💯🚫🎛️🕶️
-Denabler
-enables or desables all mods 
-settings: disable denabler itself or not deafultly
-are you happy now?
+# Denabler
+enables or disables all mods 
+settings: disable the denabler itself or not by default
+Are you happy now? You all users made me do it, now my about looks like this, is it better? you decide :(
