@@ -13,29 +13,29 @@ class $modify(MyMenuLayer, MenuLayer) {
             return false;
         }
 
-        log::info("MyMenuLayer: creating button");
+        log::info("MyMenuLayer: creating mods button");
 
-        auto myButton = CCMenuItemSpriteExtra::create(
-            CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png"),
-            this,
-            menu_selector(MyMenuLayer::onMyButton)
-        );
+        auto myButton = CCMenuItemSpriteExtra::create(  
+            CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png"),  
+            this,  
+            menu_selector(MyMenuLayer::onMyButton)  
+        );  
 
-        auto menu = this->getChildByID("bottom-menu");
-        if (!menu) log::info("MyMenuLayer: bottom-menu node not found");
+        auto menu = this->getChildByID("bottom-menu");  
+        if (!menu) log::info("MyMenuLayer: bottom-menu node not found");  
         else log::info("MyMenuLayer: bottom-menu found, adding button");
 
-        menu->addChild(myButton);
-        myButton->setID("mods-button"_spr);
+        menu->addChild(myButton);  
+        myButton->setID("mods-button"_spr);  
 
-        menu->updateLayout();
+        menu->updateLayout();  
         log::info("MyMenuLayer: button added and layout updated");
 
-        return true;
-    }
+        return true;  
+    }  
 
-    void onMyButton(CCObject*) {
-        log::info("MyMenuLayer: mods button pressed");
-        ModsPopup::showPopup();
+    void onMyButton(CCObject*) {  
+        log::info("MyMenuLayer: mods button pressed");  
+        ModsPopup::showPopup();  
     }
 };
