@@ -6,7 +6,7 @@ using namespace geode::prelude;
 
 class ModsPopup : public CCNode {
 protected:
-    CCNode* m_bg = nullptr;
+    CCScale9Sprite* m_bg = nullptr;
     CCScrollView* m_scroll = nullptr;
     CCNode* m_contentNode = nullptr;
     CCMenu* m_menu = nullptr;
@@ -14,19 +14,25 @@ protected:
     bool init() {
         log::info("ModsPopup: init called");
 
-        // Fullscreen transparent background
-        m_bg = CCLayerColor::create({0, 0, 0, 180});
-        this->addChild(m_bg);
+        auto director = CCDirector::sharedDirector();
+        auto visibleSize = director->getVisibleSize();
+        auto visibleOrigin = director->getVisibleOrigin();
+
+        // Fullscreen semi-transparent overlay
+        auto overlay = CCLayerColor::create({0,0,0,180});
+        overlay->setPosition(visibleOrigin);
+        this->addChild(overlay, 0);
 
         // Popup background
         float popupWidth = 500.f;
         float popupHeight = 400.f;
+
         m_bg = CCScale9Sprite::create("square02_001.png");
         m_bg->setContentSize({popupWidth, popupHeight});
-        m_bg->setPosition({0, 0}); // center
+        m_bg->setPosition({visibleOrigin.x + visibleSize.width/2, visibleOrigin.y + visibleSize.height/2});
         this->addChild(m_bg, 1);
 
-        // Scroll view for mods
+        // Scroll view
         float scrollW = popupWidth - 40.f;
         float scrollH = popupHeight - 80.f;
 
@@ -35,7 +41,7 @@ protected:
 
         m_scroll = CCScrollView::create({scrollW, scrollH}, m_contentNode);
         m_scroll->setDirection(kCCScrollViewDirectionVertical);
-        m_scroll->setPosition({-scrollW / 2, -scrollH / 2}); // center in bg
+        m_scroll->setPosition({(popupWidth - scrollW)/2 - popupWidth/2, (popupHeight - scrollH)/2 - popupHeight/2});
         m_scroll->setBounceable(true);
         m_bg->addChild(m_scroll, 10);
 
@@ -79,18 +85,18 @@ protected:
 
             auto itemBG = CCScale9Sprite::create("square01_001.png");
             itemBG->setContentSize({width, itemH});
-            itemBG->setPosition({width / 2, y - itemH / 2});
+            itemBG->setPosition({width/2, y - itemH/2});
             m_contentNode->addChild(itemBG);
 
             auto lbl = CCLabelBMFont::create(mod->getName().c_str(), "goldFont.fnt");
             lbl->setAnchorPoint({0.f, 0.5f});
-            lbl->setPosition({12.f, y - itemH / 2});
+            lbl->setPosition({12.f, y - itemH/2});
             lbl->setScale(0.5f);
             m_contentNode->addChild(lbl);
 
             auto ver = CCLabelBMFont::create(mod->getVersion().toVString().c_str(), "chatFont.fnt");
             ver->setAnchorPoint({1.f, 0.5f});
-            ver->setPosition({width - 12.f, y - itemH / 2});
+            ver->setPosition({width - 12.f, y - itemH/2});
             ver->setScale(0.45f);
             m_contentNode->addChild(ver);
 
@@ -100,14 +106,14 @@ protected:
         if (mods.empty()) {
             log::info("ModsPopup: no mods installed");
             auto lbl = CCLabelBMFont::create("No mods installed.", "chatFont.fnt");
-            lbl->setPosition({width / 2, 20});
+            lbl->setPosition({width/2, 20});
             m_contentNode->addChild(lbl);
             contentHeight = scrollH;
             m_contentNode->setContentSize({width, contentHeight});
         }
 
         m_scroll->setContentSize({width, contentHeight});
-        m_scroll->setContentOffset({0, 0});
+        m_scroll->setContentOffset({0,0});
         log::info("ModsPopup: populateMods finished, content height {}", contentHeight);
     }
 
@@ -127,11 +133,13 @@ public:
         return nullptr;
     }
 
+    // Keep the old call
     static void showPopup() {
         auto popup = ModsPopup::create();
         if (!popup) return;
 
         auto scene = CCDirector::sharedDirector()->getRunningScene();
-        if (scene) scene->addChild(popup, 9999); // high z-order
+        if (scene) scene->addChild(popup, 9999);
+        log::info("ModsPopup: popup shown");
     }
 };
