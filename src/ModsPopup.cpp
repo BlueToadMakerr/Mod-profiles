@@ -11,7 +11,7 @@ protected:
     CCNode* m_contentNode = nullptr;
     CCMenu* m_menu = nullptr;
 
-    bool init() {
+    bool init() override {
         log::info("ModsPopup: init called");
 
         auto director = CCDirector::sharedDirector();
@@ -19,7 +19,7 @@ protected:
         auto visibleOrigin = director->getVisibleOrigin();
 
         // Fullscreen semi-transparent overlay, enable touch to block clicks behind
-        if (!CCLayerColor::init({0,0,0,180})) return false;
+        if (!CCLayerColor::initWithColor({0,0,0,180})) return false;
         setTouchEnabled(true);
         setTouchMode(kCCTouchesOneByOne);
         setTouchPriority(-128);
@@ -47,11 +47,11 @@ protected:
             this,
             menu_selector(ModsPopup::onDone)
         );
-        // Y position adjusted so it's inside the popup
+        // Y position fixed inside popup
         doneBtn->setPosition({0, -popupHeight/2 + padding + doneButtonHeight/2 + 5});
         m_menu->addChild(doneBtn);
 
-        // Scroll view height is popupHeight minus space for Done button and top/bottom padding
+        // Scroll view height is popupHeight minus space for Done button and padding
         float scrollW = popupWidth - 40.f;
         float scrollH = popupHeight - doneButtonHeight - 3*padding;
 
