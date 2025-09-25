@@ -24,30 +24,17 @@ protected:
         this->addChild(overlay, 0);
 
         // Popup background
-        float popupWidth = 500.f;
-        float popupHeight = 400.f;
+        float popupWidth = 450.f; // shortened width
+        float popupHeight = 300.f;
 
         m_bg = CCScale9Sprite::create("square02_001.png");
         m_bg->setContentSize({popupWidth, popupHeight});
         m_bg->setPosition({visibleOrigin.x + visibleSize.width/2, visibleOrigin.y + visibleSize.height/2});
         this->addChild(m_bg, 1);
 
-        // Scroll view
-// Scroll view size
-float scrollW = popupWidth - 40.f;
-float scrollH = popupHeight - 80.f;
-
-m_contentNode = CCNode::create();
-m_contentNode->setContentSize({scrollW, 0});
-
-// Scroll view is centered in the popup
-m_scroll = CCScrollView::create({scrollW, scrollH}, m_contentNode);
-m_scroll->setDirection(kCCScrollViewDirectionVertical);
-m_scroll->setBounceable(true);
-
-// Center scroll in m_bg
-m_scroll->setPosition({0, 10}); // 0 = center X, 10 = small Y offset to leave space for title
-m_bg->addChild(m_scroll, 10);
+        // Done button height and spacing
+        float doneButtonHeight = 50.f;
+        float padding = 10.f;
 
         // Menu for Done button
         m_menu = CCMenu::create();
@@ -59,8 +46,22 @@ m_bg->addChild(m_scroll, 10);
             this,
             menu_selector(ModsPopup::onDone)
         );
-        doneBtn->setPosition({0, -popupHeight/2 + 30});
+        doneBtn->setPosition({0, -popupHeight/2 + padding + doneButtonHeight/2});
         m_menu->addChild(doneBtn);
+
+        // Scroll view height is popupHeight minus space for Done button and padding
+        float scrollW = popupWidth - 40.f;
+        float scrollH = popupHeight - doneButtonHeight - 3*padding;
+
+        m_contentNode = CCNode::create();
+        m_contentNode->setContentSize({scrollW, 0});
+
+        m_scroll = CCScrollView::create({scrollW, scrollH}, m_contentNode);
+        m_scroll->setDirection(kCCScrollViewDirectionVertical);
+        m_scroll->setBounceable(true);
+        // Center scroll horizontally, place above Done button
+        m_scroll->setPosition({0, doneButtonHeight/2});
+        m_bg->addChild(m_scroll, 10);
 
         populateMods(scrollW, scrollH);
 
@@ -137,7 +138,6 @@ public:
         return nullptr;
     }
 
-    // Keep the old call
     static void showPopup() {
         auto popup = ModsPopup::create();
         if (!popup) return;
