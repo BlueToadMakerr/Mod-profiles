@@ -1,19 +1,20 @@
 #include <Geode/Geode.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <Geode/ui/Popup.hpp>
 
 using namespace geode::prelude;
 
-class ModsPopup : public Popup<ModsPopup> {
+class ModsPopup : public FLAlertLayer {
 protected:
     CCScrollView* m_scroll = nullptr;
     CCNode* m_contentNode = nullptr;
 
-    // No-argument setup
-    bool setup() {
-        const float scrollW = m_size.width - 40.f;
-        const float scrollH = m_size.height - 60.f;
+    bool init() {
+        if (!FLAlertLayer::init(0, "Installed Mods", "OK", nullptr, 360.f, false, 260.f, 1.f))
+            return false;
+
+        const float scrollW = m_buttonMenu->getContentSize().width - 40.f;
+        const float scrollH = m_buttonMenu->getContentSize().height - 60.f;
 
         m_contentNode = CCNode::create();
         m_contentNode->setContentSize({scrollW, 0});
@@ -71,11 +72,17 @@ protected:
 
 public:
     static ModsPopup* create() {
-        // no arguments here -> setup() is no-arg
-        return Popup<ModsPopup>::create();
+        auto ret = new ModsPopup();
+        if (ret && ret->init()) {
+            ret->autorelease();
+            return ret;
+        }
+        CC_SAFE_DELETE(ret);
+        return nullptr;
     }
 
     static void showPopup() {
-        create()->show();
+        auto popup = ModsPopup::create();
+        if (popup) popup->show();
     }
 };
