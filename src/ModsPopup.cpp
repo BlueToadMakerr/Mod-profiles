@@ -33,17 +33,21 @@ protected:
         this->addChild(m_bg, 1);
 
         // Scroll view
-        float scrollW = popupWidth - 40.f;
-        float scrollH = popupHeight - 80.f;
+// Scroll view size
+float scrollW = popupWidth - 40.f;
+float scrollH = popupHeight - 80.f;
 
-        m_contentNode = CCNode::create();
-        m_contentNode->setContentSize({scrollW, 0});
+m_contentNode = CCNode::create();
+m_contentNode->setContentSize({scrollW, 0});
 
-        m_scroll = CCScrollView::create({scrollW, scrollH}, m_contentNode);
-        m_scroll->setDirection(kCCScrollViewDirectionVertical);
-        m_scroll->setPosition({(popupWidth - scrollW)/2 - popupWidth/2, (popupHeight - scrollH)/2 - popupHeight/2});
-        m_scroll->setBounceable(true);
-        m_bg->addChild(m_scroll, 10);
+// Scroll view is centered in the popup
+m_scroll = CCScrollView::create({scrollW, scrollH}, m_contentNode);
+m_scroll->setDirection(kCCScrollViewDirectionVertical);
+m_scroll->setBounceable(true);
+
+// Center scroll in m_bg
+m_scroll->setPosition({0, 10}); // 0 = center X, 10 = small Y offset to leave space for title
+m_bg->addChild(m_scroll, 10);
 
         // Menu for Done button
         m_menu = CCMenu::create();
