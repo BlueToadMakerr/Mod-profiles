@@ -10,10 +10,8 @@ protected:
     CCScrollView* m_scroll = nullptr;
     CCNode* m_contentNode = nullptr;
 
-    bool setup() override {
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-
-        // Scroll area inside popup
+    // No-argument setup
+    bool setup() {
         const float scrollW = m_size.width - 40.f;
         const float scrollH = m_size.height - 60.f;
 
@@ -41,18 +39,18 @@ protected:
 
             auto itemBG = CCScale9Sprite::create("square01_001.png");
             itemBG->setContentSize({width, itemH});
-            itemBG->setPosition({width / 2, - (y + itemH / 2)});
+            itemBG->setPosition({width / 2, -(y + itemH / 2)});
             m_contentNode->addChild(itemBG);
 
             auto lbl = CCLabelBMFont::create(mod->getName().c_str(), "goldFont.fnt");
             lbl->setAnchorPoint({0.f, 0.5f});
-            lbl->setPosition({12.f, - (y + itemH / 2)});
+            lbl->setPosition({12.f, -(y + itemH / 2)});
             lbl->setScale(0.5f);
             m_contentNode->addChild(lbl);
 
             auto ver = CCLabelBMFont::create(mod->getVersion().toVString().c_str(), "chatFont.fnt");
             ver->setAnchorPoint({1.f, 0.5f});
-            ver->setPosition({width - 12.f, - (y + itemH / 2)});
+            ver->setPosition({width - 12.f, -(y + itemH / 2)});
             ver->setScale(0.45f);
             m_contentNode->addChild(ver);
 
@@ -73,7 +71,8 @@ protected:
 
 public:
     static ModsPopup* create() {
-        return Popup<ModsPopup>::create(360.f, 260.f, "GJ_square01.png", "Installed Mods");
+        // no arguments here -> setup() is no-arg
+        return Popup<ModsPopup>::create();
     }
 
     static void showPopup() {
