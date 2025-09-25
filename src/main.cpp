@@ -6,30 +6,36 @@ using namespace geode::prelude;
 
 class $modify(MyMenuLayer, MenuLayer) {
     bool init() {
-        if (!MenuLayer::init()) return false;
+        log::info("MyMenuLayer: init called");
 
-        // Create our button using the desired sprite
+        if (!MenuLayer::init()) {
+            log::info("MyMenuLayer: MenuLayer::init failed");
+            return false;
+        }
+
+        log::info("MyMenuLayer: creating button");
+
         auto myButton = CCMenuItemSpriteExtra::create(
             CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png"),
             this,
             menu_selector(MyMenuLayer::onMyButton)
         );
 
-        // Access the existing bottom-menu node by its ID
         auto menu = this->getChildByID("bottom-menu");
-        menu->addChild(myButton);
+        if (!menu) log::info("MyMenuLayer: bottom-menu node not found");
+        else log::info("MyMenuLayer: bottom-menu found, adding button");
 
-        // Give our button a unique ID (namespaced with your mod id)
+        menu->addChild(myButton);
         myButton->setID("mods-button"_spr);
 
-        // Recalculate menu layout so our button sits correctly at the bottom
         menu->updateLayout();
+        log::info("MyMenuLayer: button added and layout updated");
 
         return true;
     }
 
     void onMyButton(CCObject*) {
-        // Show the mods popup we made earlier
+        log::info("MyMenuLayer: mods button pressed");
         ModsPopup::showPopup();
     }
 };
