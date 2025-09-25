@@ -10,7 +10,7 @@ protected:
     CCNode* m_contentNode = nullptr;
 
     bool init() {
-        if (!FLAlertLayer::init(0, "Installed Mods", "OK", nullptr, 360.f, false, 260.f, 1.f))
+        if (!FLAlertLayer::init(0, "Installed Mods", "", "OK", nullptr, 360.f, false, 260.f, 1.f))
             return false;
 
         const float scrollW = m_buttonMenu->getContentSize().width - 40.f;
