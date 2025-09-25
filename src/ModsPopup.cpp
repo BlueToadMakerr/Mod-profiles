@@ -4,7 +4,7 @@
 
 using namespace geode::prelude;
 
-class ModsPopup : public CCNode {
+class ModsPopup : public CCLayerColor {
 protected:
     CCScale9Sprite* m_bg = nullptr;
     CCScrollView* m_scroll = nullptr;
@@ -18,13 +18,14 @@ protected:
         auto visibleSize = director->getVisibleSize();
         auto visibleOrigin = director->getVisibleOrigin();
 
-        // Fullscreen semi-transparent overlay
-        auto overlay = CCLayerColor::create({0,0,0,180});
-        overlay->setPosition(visibleOrigin);
-        this->addChild(overlay, 0);
+        // Fullscreen semi-transparent overlay, enable touch to block clicks behind
+        if (!CCLayerColor::init({0,0,0,180})) return false;
+        setTouchEnabled(true);
+        setTouchMode(kCCTouchesOneByOne);
+        setTouchPriority(-128);
 
         // Popup background
-        float popupWidth = 450.f; // shortened width
+        float popupWidth = 450.f;
         float popupHeight = 300.f;
 
         m_bg = CCScale9Sprite::create("square02_001.png");
@@ -46,10 +47,11 @@ protected:
             this,
             menu_selector(ModsPopup::onDone)
         );
-        doneBtn->setPosition({0, -popupHeight/2 + padding + doneButtonHeight/2});
+        // Y position adjusted so it's inside the popup
+        doneBtn->setPosition({0, -popupHeight/2 + padding + doneButtonHeight/2 + 5});
         m_menu->addChild(doneBtn);
 
-        // Scroll view height is popupHeight minus space for Done button and padding
+        // Scroll view height is popupHeight minus space for Done button and top/bottom padding
         float scrollW = popupWidth - 40.f;
         float scrollH = popupHeight - doneButtonHeight - 3*padding;
 
@@ -60,7 +62,7 @@ protected:
         m_scroll->setDirection(kCCScrollViewDirectionVertical);
         m_scroll->setBounceable(true);
         // Center scroll horizontally, place above Done button
-        m_scroll->setPosition({0, doneButtonHeight/2});
+        m_scroll->setPosition({0, doneButtonHeight/2 + 5});
         m_bg->addChild(m_scroll, 10);
 
         populateMods(scrollW, scrollH);
@@ -125,6 +127,11 @@ protected:
     void onDone(CCObject*) {
         log::info("ModsPopup: Done pressed, removing popup");
         this->removeFromParentAndCleanup(true);
+    }
+
+    // Capture touches to block clicks behind
+    virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) override {
+        return true; // swallow all touches
     }
 
 public:
