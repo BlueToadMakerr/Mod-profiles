@@ -1,12 +1,11 @@
 #include <Geode/Geode.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <Geode/ui/GeodeUI.hpp>
+#include <Geode/ui/Popup.hpp>
 
 using namespace geode::prelude;
 
-// Popup that lists all installed mods in a scrollable view
-class ModsPopup : public FLAlertLayer {
+class ModsPopup : public Popup<ModsPopup> {
 protected:
     CCScrollView* m_scroll = nullptr;
     CCNode* m_contentNode = nullptr;
@@ -14,18 +13,9 @@ protected:
     bool setup() override {
         auto winSize = CCDirector::sharedDirector()->getWinSize();
 
-        // Panel size
-        const float w = winSize.width * 0.78f;
-        const float h = winSize.height * 0.72f;
-
-        // Title
-        auto title = CCLabelBMFont::create("Installed Mods", "goldFont.fnt");
-        title->setPosition({0, h / 2 - 24});
-        m_buttonMenu->addChild(title);
-
-        // Scrollable area
-        const float scrollW = w - 40.f;
-        const float scrollH = h - 80.f;
+        // Scroll area inside popup
+        const float scrollW = m_size.width - 40.f;
+        const float scrollH = m_size.height - 60.f;
 
         m_contentNode = CCNode::create();
         m_contentNode->setContentSize({scrollW, 0});
@@ -36,7 +26,6 @@ protected:
         m_scroll->setBounceable(true);
         this->m_mainLayer->addChild(m_scroll);
 
-        // Populate with Geode mods
         populateMods(scrollW);
 
         return true;
@@ -50,21 +39,18 @@ protected:
         for (auto* mod : Loader::get()->getAllMods()) {
             if (!mod) continue;
 
-            // Background
             auto itemBG = CCScale9Sprite::create("square01_001.png");
             itemBG->setContentSize({width, itemH});
             itemBG->setPosition({width / 2, - (y + itemH / 2)});
             m_contentNode->addChild(itemBG);
 
-            // Name
             auto lbl = CCLabelBMFont::create(mod->getName().c_str(), "goldFont.fnt");
             lbl->setAnchorPoint({0.f, 0.5f});
             lbl->setPosition({12.f, - (y + itemH / 2)});
             lbl->setScale(0.5f);
             m_contentNode->addChild(lbl);
 
-            // Version
-            auto ver = CCLabelBMFont::create(mod->getVersion().toString().c_str(), "chatFont.fnt");
+            auto ver = CCLabelBMFont::create(mod->getVersion().toVString().c_str(), "chatFont.fnt");
             ver->setAnchorPoint({1.f, 0.5f});
             ver->setPosition({width - 12.f, - (y + itemH / 2)});
             ver->setScale(0.45f);
@@ -86,18 +72,11 @@ protected:
     }
 
 public:
-    static void show() {
-        auto popup = ModsPopup::create();
-        popup->show();
+    static ModsPopup* create() {
+        return Popup<ModsPopup>::create(360.f, 260.f, "GJ_square01.png", "Installed Mods");
     }
 
-    static ModsPopup* create() {
-        auto ret = new ModsPopup();
-        if (ret && ret->init(360.f, 260.f, "GJ_square01.png", "OK")) {
-            ret->autorelease();
-            return ret;
-        }
-        CC_SAFE_DELETE(ret);
-        return nullptr;
+    static void showPopup() {
+        create()->show();
     }
 };
