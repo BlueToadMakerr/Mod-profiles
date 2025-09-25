@@ -18,11 +18,8 @@ protected:
         auto visibleSize = director->getVisibleSize();
         auto visibleOrigin = director->getVisibleOrigin();
 
-        // Fullscreen semi-transparent overlay, enable touch to block clicks behind
+        // Fullscreen semi-transparent overlay
         if (!CCLayerColor::initWithColor({0,0,0,180})) return false;
-        setTouchEnabled(true);
-        setTouchMode(kCCTouchesOneByOne);
-        setTouchPriority(-128);
 
         // Popup background
         float popupWidth = 450.f;
@@ -47,8 +44,9 @@ protected:
             this,
             menu_selector(ModsPopup::onDone)
         );
-        // Y position fixed inside popup
-        doneBtn->setPosition({0, -popupHeight/2 + padding + doneButtonHeight/2 + 5});
+
+        // Bottom-center position
+        doneBtn->setPosition({0, -popupHeight/2 + doneButtonHeight/2 + padding});
         m_menu->addChild(doneBtn);
 
         // Scroll view height is popupHeight minus space for Done button and padding
@@ -62,7 +60,7 @@ protected:
         m_scroll->setDirection(kCCScrollViewDirectionVertical);
         m_scroll->setBounceable(true);
         // Center scroll horizontally, place above Done button
-        m_scroll->setPosition({0, doneButtonHeight/2 + 5});
+        m_scroll->setPosition({0, doneButtonHeight/2 + padding});
         m_bg->addChild(m_scroll, 10);
 
         populateMods(scrollW, scrollH);
@@ -127,11 +125,6 @@ protected:
     void onDone(CCObject*) {
         log::info("ModsPopup: Done pressed, removing popup");
         this->removeFromParentAndCleanup(true);
-    }
-
-    // Capture touches to block clicks behind
-    virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) override {
-        return true; // swallow all touches
     }
 
 public:
