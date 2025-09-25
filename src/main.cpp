@@ -30,6 +30,6 @@ class $modify(MyMenuLayer, MenuLayer) {
 
     void onMyButton(CCObject*) {
         // Show the mods popup we made earlier
-        ModsPopup::show();
+        ModsPopup::showPopup();
     }
 };
