@@ -31,10 +31,13 @@ protected:
 
         m_bg = CCScale9Sprite::create("square02_001.png");
         m_bg->setContentSize({popupWidth, popupHeight});
-        m_bg->setPosition({visibleOrigin.x + visibleSize.width/2, visibleOrigin.y + visibleSize.height/2});
+        m_bg->setPosition({
+            visibleOrigin.x + visibleSize.width/2,
+            visibleOrigin.y + visibleSize.height/2
+        });
         this->addChild(m_bg, 1);
 
-        // Done button height and spacing
+        // Done button height and padding
         float doneButtonHeight = 50.f;
         float padding = 10.f;
 
@@ -49,8 +52,11 @@ protected:
             menu_selector(ModsPopup::onDone)
         );
 
-        // Bottom-center inside popup
-        doneBtn->setPosition({0, -popupHeight/2 + doneButtonHeight/2 + padding});
+        // Bottom-center using screen-based calculation (like popup center)
+        doneBtn->setPosition({
+            visibleOrigin.x + visibleSize.width/2,
+            visibleOrigin.y + visibleSize.height/2 - popupHeight/2 + doneButtonHeight/2 + padding
+        });
         m_menu->addChild(doneBtn);
 
         // Scroll view height is popupHeight minus space for Done button and padding
@@ -63,10 +69,12 @@ protected:
         m_scroll = CCScrollView::create({scrollW, scrollH}, m_contentNode);
         m_scroll->setDirection(kCCScrollViewDirectionVertical);
         m_scroll->setBounceable(true);
-
-        // Center scroll horizontally, place above Done button
-        m_scroll->setPosition({0, doneButtonHeight/2 + padding});
-        m_bg->addChild(m_scroll, 10);
+        // Center scroll horizontally relative to popup, position above Done button
+        m_scroll->setPosition({
+            visibleOrigin.x + visibleSize.width/2,
+            visibleOrigin.y + visibleSize.height/2 - popupHeight/2 + doneButtonHeight + 2*padding
+        });
+        this->addChild(m_scroll, 10);
 
         populateMods(scrollW, scrollH);
 
@@ -138,13 +146,13 @@ protected:
         auto popupPos = m_bg->convertToNodeSpace(loc);
         auto popupSize = m_bg->getContentSize();
 
-        // If touch inside popup, let children handle it
+        // Touch inside popup → allow
         if (popupPos.x >= 0 && popupPos.x <= popupSize.width &&
             popupPos.y >= 0 && popupPos.y <= popupSize.height) {
-            return false; // don’t swallow
+            return false;
         }
 
-        // Touch outside popup, block it
+        // Touch outside popup → block
         return true;
     }
 
