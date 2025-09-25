@@ -42,11 +42,16 @@ protected:
 
         const float itemH = 50.f;  
         const float padY = 8.f;  
-        float y = 0.f;  
 
         auto mods = Loader::get()->getAllMods();
         log::info("ModsPopup: {} mods returned by Loader", mods.size());
 
+        float contentHeight = mods.size() * (itemH + padY);
+        if (contentHeight < m_scroll->getViewSize().height) contentHeight = m_scroll->getViewSize().height;
+
+        m_contentNode->setContentSize({width, contentHeight});
+
+        float y = contentHeight; // start at top
         for (auto* mod : mods) {  
             if (!mod) continue;  
 
@@ -54,37 +59,37 @@ protected:
 
             auto itemBG = CCScale9Sprite::create("square01_001.png");  
             itemBG->setContentSize({width, itemH});  
-            itemBG->setPosition({width / 2, -(y + itemH / 2)});  
+            itemBG->setPosition({width / 2, y - itemH / 2});  
             m_contentNode->addChild(itemBG);  
 
             auto lbl = CCLabelBMFont::create(mod->getName().c_str(), "goldFont.fnt");  
             lbl->setAnchorPoint({0.f, 0.5f});  
-            lbl->setPosition({12.f, -(y + itemH / 2)});  
+            lbl->setPosition({12.f, y - itemH / 2});  
             lbl->setScale(0.5f);  
             m_contentNode->addChild(lbl);  
 
             auto ver = CCLabelBMFont::create(mod->getVersion().toVString().c_str(), "chatFont.fnt");  
             ver->setAnchorPoint({1.f, 0.5f});  
-            ver->setPosition({width - 12.f, -(y + itemH / 2)});  
+            ver->setPosition({width - 12.f, y - itemH / 2});  
             ver->setScale(0.45f);  
             m_contentNode->addChild(ver);  
 
-            y += itemH + padY;  
+            y -= itemH + padY;  
         }  
 
-        if (y == 0.f) {  
+        if (mods.empty()) {  
             log::info("ModsPopup: no mods installed");  
             auto lbl = CCLabelBMFont::create("No mods installed.", "chatFont.fnt");  
             lbl->setPosition({width / 2, 20});  
             m_contentNode->addChild(lbl);  
-            y = 40.f;  
+            contentHeight = 40.f;  
+            m_contentNode->setContentSize({width, contentHeight});
         }  
 
-        m_contentNode->setContentSize({width, y});  
-        m_scroll->setContentSize({width, y});  
-        m_scroll->setContentOffset({0, m_scroll->getViewSize().height - y});  
+        m_scroll->setContentSize({width, contentHeight});
+        m_scroll->setContentOffset({0, 0}); // scroll starts at top
 
-        log::info("ModsPopup: populateMods finished, content height {}", y);
+        log::info("ModsPopup: populateMods finished, content height {}", contentHeight);
     }
 
 public:
