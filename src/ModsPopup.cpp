@@ -1,65 +1,39 @@
 #include <Geode/Geode.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
+#include <Geode/ui/TextArea.hpp>
+#include <Geode/ui/ButtonSprite.hpp>
+#include <Geode/ui/Anchor.hpp>
 
 using namespace geode::prelude;
 
-class ModsPopup : public CCLayerColor {
+class ModsLayer : public CCLayer {
 protected:
-    CCScale9Sprite* m_bg = nullptr;
+    CCNode* m_mainLayer = nullptr;
     CCScrollView* m_scroll = nullptr;
     CCNode* m_contentNode = nullptr;
-    CCMenu* m_menu = nullptr;
+    CCMenu* m_buttonMenu = nullptr;
 
-    bool init() override {
-        log::info("ModsPopup: init called");
+    float popupWidth = 450.f;
+    float popupHeight = 300.f;
+    float padding = 10.f;
+    float doneButtonHeight = 50.f;
 
+    bool init() {
         auto director = CCDirector::sharedDirector();
-        auto visibleSize = director->getVisibleSize();
+        auto winSize = director->getWinSize();
         auto visibleOrigin = director->getVisibleOrigin();
 
-        // Fullscreen semi-transparent overlay
-        if (!CCLayerColor::initWithColor({0,0,0,180})) return false;
-
-        setTouchEnabled(true);
-        setTouchMode(kCCTouchesOneByOne);
-        setTouchPriority(-128);
+        m_mainLayer = CCNode::create();
+        this->addChild(m_mainLayer);
 
         // Popup background
-        float popupWidth = 450.f;
-        float popupHeight = 300.f;
+        auto bg = CCScale9Sprite::create("square02_001.png");
+        bg->setContentSize({popupWidth, popupHeight});
+        bg->setPosition({visibleOrigin.x + winSize.width/2, visibleOrigin.y + winSize.height/2});
+        m_mainLayer->addChild(bg);
 
-        m_bg = CCScale9Sprite::create("square02_001.png");
-        m_bg->setContentSize({popupWidth, popupHeight});
-        m_bg->setPosition({
-            visibleOrigin.x + visibleSize.width/2,
-            visibleOrigin.y + visibleSize.height/2
-        });
-        this->addChild(m_bg, 1);
-
-        // Done button height and padding
-        float doneButtonHeight = 50.f;
-        float padding = 10.f;
-
-        // Menu for Done button
-        m_menu = CCMenu::create();
-        m_menu->setPosition({0,0});
-        m_bg->addChild(m_menu, 20);
-
-        auto doneBtn = CCMenuItemLabel::create(
-            CCLabelBMFont::create("Done", "goldFont.fnt"),
-            this,
-            menu_selector(ModsPopup::onDone)
-        );
-
-        // Bottom-center using screen-based calculation (like popup center)
-        doneBtn->setPosition({
-            visibleOrigin.x + visibleSize.width/2,
-            visibleOrigin.y + visibleSize.height/2 - popupHeight/2 + doneButtonHeight/2 + padding
-        });
-        m_menu->addChild(doneBtn);
-
-        // Scroll view height is popupHeight minus space for Done button and padding
+        // Scrollable mods list
         float scrollW = popupWidth - 40.f;
         float scrollH = popupHeight - doneButtonHeight - 3*padding;
 
@@ -69,37 +43,52 @@ protected:
         m_scroll = CCScrollView::create({scrollW, scrollH}, m_contentNode);
         m_scroll->setDirection(kCCScrollViewDirectionVertical);
         m_scroll->setBounceable(true);
-        // Center scroll horizontally relative to popup, position above Done button
         m_scroll->setPosition({
-            visibleOrigin.x + visibleSize.width/2,
-            visibleOrigin.y + visibleSize.height/2 - popupHeight/2 + doneButtonHeight + 2*padding
+            bg->getPositionX(),
+            bg->getPositionY() - popupHeight/2 + doneButtonHeight + 2*padding
         });
-        this->addChild(m_scroll, 10);
+        m_mainLayer->addChild(m_scroll, 10);
 
         populateMods(scrollW, scrollH);
+
+        // Button menu
+        m_buttonMenu = CCMenu::create();
+        m_buttonMenu->setPosition({0,0});
+        m_mainLayer->addChild(m_buttonMenu, 20);
+
+        auto okSpr = ButtonSprite::create("OK", "goldFont.fnt", "GJ_button_01.png", 0.8f);
+        auto okBtn = CCMenuItemSpriteExtra::create(
+            okSpr, this, menu_selector(ModsLayer::onDone)
+        );
+
+        okBtn->setPosition({
+            bg->getPositionX(),                  // center horizontally
+            bg->getPositionY() - popupHeight/2 + doneButtonHeight/2 + padding // bottom middle
+        });
+
+        m_buttonMenu->addChild(okBtn);
+
+        // Enable touches to block background clicks
+        setTouchEnabled(true);
+        setTouchMode(kCCTouchesOneByOne);
+        setTouchPriority(-128);
 
         return true;
     }
 
     void populateMods(float width, float scrollH) {
-        log::info("ModsPopup: populateMods called");
-
         const float itemH = 50.f;
         const float padY = 8.f;
 
         auto mods = Loader::get()->getAllMods();
-        log::info("ModsPopup: {} mods returned by Loader", mods.size());
-
         float contentHeight = mods.size() * (itemH + padY);
         if (contentHeight < scrollH) contentHeight = scrollH;
 
         m_contentNode->setContentSize({width, contentHeight});
 
-        float y = contentHeight; // start at top
+        float y = contentHeight;
         for (auto* mod : mods) {
             if (!mod) continue;
-
-            log::info("ModsPopup: adding mod '{}' version '{}'", mod->getName(), mod->getVersion().toVString());
 
             auto itemBG = CCScale9Sprite::create("square01_001.png");
             itemBG->setContentSize({width, itemH});
@@ -122,43 +111,35 @@ protected:
         }
 
         if (mods.empty()) {
-            log::info("ModsPopup: no mods installed");
             auto lbl = CCLabelBMFont::create("No mods installed.", "chatFont.fnt");
             lbl->setPosition({width/2, 20});
             m_contentNode->addChild(lbl);
-            contentHeight = scrollH;
-            m_contentNode->setContentSize({width, contentHeight});
         }
 
         m_scroll->setContentSize({width, contentHeight});
         m_scroll->setContentOffset({0,0});
-        log::info("ModsPopup: populateMods finished, content height {}", contentHeight);
     }
 
     void onDone(CCObject*) {
-        log::info("ModsPopup: Done pressed, removing popup");
         this->removeFromParentAndCleanup(true);
     }
 
-    // Capture touches to block clicks behind popup
     virtual bool ccTouchBegan(CCTouch* touch, CCEvent* event) override {
         auto loc = touch->getLocation();
-        auto popupPos = m_bg->convertToNodeSpace(loc);
-        auto popupSize = m_bg->getContentSize();
+        auto bgPos = m_mainLayer->getPosition();
+        auto bgSize = CCSize(popupWidth, popupHeight);
 
-        // Touch inside popup → allow
-        if (popupPos.x >= 0 && popupPos.x <= popupSize.width &&
-            popupPos.y >= 0 && popupPos.y <= popupSize.height) {
-            return false;
+        // Block touches outside popup
+        if (loc.x < bgPos.x - popupWidth/2 || loc.x > bgPos.x + popupWidth/2 ||
+            loc.y < bgPos.y - popupHeight/2 || loc.y > bgPos.y + popupHeight/2) {
+            return true;
         }
-
-        // Touch outside popup → block
-        return true;
+        return false;
     }
 
 public:
-    static ModsPopup* create() {
-        auto ret = new ModsPopup();
+    static ModsLayer* create() {
+        auto ret = new ModsLayer();
         if (ret && ret->init()) {
             ret->autorelease();
             return ret;
@@ -168,11 +149,10 @@ public:
     }
 
     static void showPopup() {
-        auto popup = ModsPopup::create();
+        auto popup = ModsLayer::create();
         if (!popup) return;
 
         auto scene = CCDirector::sharedDirector()->getRunningScene();
         if (scene) scene->addChild(popup, 9999);
-        log::info("ModsPopup: popup shown");
     }
 };
