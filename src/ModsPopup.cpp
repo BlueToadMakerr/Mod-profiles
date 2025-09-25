@@ -127,7 +127,7 @@ public:
         return nullptr;
     }
 
-    static void show() {
+    static void showPopup() {
         auto popup = ModsPopup::create();
         if (!popup) return;
 
