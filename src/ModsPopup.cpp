@@ -10,8 +10,12 @@ protected:
     CCNode* m_contentNode = nullptr;
 
     bool init() {
-        if (!FLAlertLayer::init(0, "Installed Mods", "", "OK", nullptr, 360.f, false, 260.f, 1.f))
+        log::info("ModsPopup: init called");
+
+        if (!FLAlertLayer::init(0, "Installed Mods", "", "OK", nullptr, 360.f, false, 260.f, 1.f)) {
+            log::info("ModsPopup: FLAlertLayer::init failed");
             return false;
+        }
 
         const float scrollW = m_buttonMenu->getContentSize().width - 40.f;
         const float scrollH = m_buttonMenu->getContentSize().height - 60.f;
@@ -25,18 +29,34 @@ protected:
         m_scroll->setBounceable(true);
         this->m_mainLayer->addChild(m_scroll);
 
+        log::info("ModsPopup: calling populateMods");
         populateMods(scrollW);
 
         return true;
     }
 
     void populateMods(float width) {
+        log::info("ModsPopup: populateMods called");
+
+        if (!Loader::get()->isLoaded()) {
+            log::info("ModsPopup: Loader not ready, scheduling populateMods again");
+            this->scheduleOnce([=](float){
+                populateMods(width);
+            }, 0.5f, "populateMods"_spr);
+            return;
+        }
+
+        const auto& mods = Loader::get()->getAllMods();
+        log::info("ModsPopup: {} mods found", mods.size());
+
         const float itemH = 50.f;
         const float padY = 8.f;
         float y = 0.f;
 
-        for (auto* mod : Loader::get()->getAllMods()) {
+        for (auto* mod : mods) {
             if (!mod) continue;
+
+            log::info("ModsPopup: adding mod '{}' version '{}'", mod->getName(), mod->getVersion().toVString());
 
             auto itemBG = CCScale9Sprite::create("square01_001.png");
             itemBG->setContentSize({width, itemH});
@@ -59,6 +79,7 @@ protected:
         }
 
         if (y == 0.f) {
+            log::info("ModsPopup: no mods installed");
             auto lbl = CCLabelBMFont::create("No mods installed.", "chatFont.fnt");
             lbl->setPosition({width / 2, 20});
             m_contentNode->addChild(lbl);
@@ -68,21 +89,32 @@ protected:
         m_contentNode->setContentSize({width, y});
         m_scroll->setContentSize({width, y});
         m_scroll->setContentOffset({0, m_scroll->getViewSize().height - y});
+
+        log::info("ModsPopup: populateMods finished, content size set to {}", y);
     }
 
 public:
     static ModsPopup* create() {
+        log::info("ModsPopup: create called");
         auto ret = new ModsPopup();
         if (ret && ret->init()) {
             ret->autorelease();
+            log::info("ModsPopup: create success");
             return ret;
         }
         CC_SAFE_DELETE(ret);
+        log::info("ModsPopup: create failed");
         return nullptr;
     }
 
     static void showPopup() {
+        log::info("ModsPopup: showPopup called");
         auto popup = ModsPopup::create();
-        if (popup) popup->show();
+        if (popup) {
+            log::info("ModsPopup: showing popup");
+            popup->show();
+        } else {
+            log::info("ModsPopup: popup creation failed");
+        }
     }
 };
