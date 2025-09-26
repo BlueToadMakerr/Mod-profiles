@@ -98,7 +98,7 @@ protected:
     }
 
 public:
-    static void createPopup() {
+    static void showPopup() {
         auto popup = ModsPopup::create(360.f, 300.f, "GJ_square01.png");
         if (popup) {
             popup->show();
