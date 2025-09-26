@@ -14,7 +14,7 @@ protected:
     bool setup() override {
         this->setTitle("Installed Mods");
 
-        // --- Search bar at top ---
+        // --- Search bar ---
         m_searchBar = TextInput::create(250.f, "Search mods...");
         m_searchBar->setCallback([this](std::string const& text) {
             this->populateMods(text);
@@ -29,13 +29,6 @@ protected:
 
         // Populate initially
         this->populateMods("");
-
-        // --- Done button ---
-        auto doneSpr = ButtonSprite::create("Done", "goldFont.fnt", "GJ_button_01.png", 0.8f);
-        auto doneBtn = CCMenuItemSpriteExtra::create(
-            doneSpr, this, menu_selector(ModsPopup::onClose)
-        );
-        m_buttonMenu->addChildAtPosition(doneBtn, Anchor::Bottom, {0, 25});
 
         return true;
     }
@@ -68,12 +61,8 @@ protected:
         m_scroll->moveToTop();
     }
 
-    void onClose(CCObject*) override {
-        this->hide(); // Proper way to close Popup<>
-    }
-
 public:
     static void showPopup() {
-        ModsPopup::create(350.f, 300.f)->show();
+        ModsPopup::create(350.f, 300.f, "GJ_square01.png")->show();
     }
 };
