@@ -81,14 +81,30 @@ protected:
                 }
             }
 
+            auto item = CCNode::create();
+            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
+
+            // mod name label
             auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({ 0.f, 0.5f });
-
-            auto item = CCNode::create();
-            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
-            item->addChild(label);
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
+            item->addChild(label);
+
+            // view button
+            auto viewBtn = CCMenuItemSpriteExtra::create(
+                ButtonSprite::create("View", 0, 0, "goldFont.fnt", "GJ_button_01.png", 0.6f),
+                [mod](CCObject*) {
+                    mod->openInfoPopup();
+                }
+            );
+            auto menu = CCMenu::create();
+            menu->addChild(viewBtn);
+            menu->setPosition({
+                item->getContentSize().width - 40.f,
+                item->getContentSize().height / 2
+            });
+            item->addChild(menu);
 
             m_scrollLayer->m_contentLayer->addChild(item);
         }
