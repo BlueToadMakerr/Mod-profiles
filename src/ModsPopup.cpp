@@ -68,8 +68,8 @@ protected:
         m_scroll->moveToTop();
     }
 
-    void onClose(CCObject*) {
-        this->onClosePopup();
+    void onClose(CCObject*) override {
+        this->hide(); // Proper way to close Popup<>
     }
 
 public:
