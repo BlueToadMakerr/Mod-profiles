@@ -16,7 +16,7 @@ protected:
 
         auto [widthCS, heightCS] = m_mainLayer->getScaledContentSize();
 
-        // search bar background
+        // Search bar background
         auto searchBG = CCScale9Sprite::create("square02b_001.png");
         searchBG->setContentSize({ widthCS - 40.f, 30.f });
         searchBG->setColor({ 0, 0, 0 });
@@ -24,7 +24,7 @@ protected:
         searchBG->setPosition({ widthCS / 2.f, heightCS - 50.f });
         m_mainLayer->addChild(searchBG);
 
-        // search input
+        // Search input
         m_searchInput = TextInput::create(widthCS - 60.f, "Search mods...");
         m_searchInput->setID("search-bar");
         m_searchInput->setPosition(searchBG->getPosition());
@@ -34,7 +34,7 @@ protected:
         });
         m_mainLayer->addChild(m_searchInput);
 
-        // scroll area background
+        // Scroll area background
         auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 100.f };
         auto scrollBG = CCScale9Sprite::create("square02b_001.png");
         scrollBG->setContentSize(scrollSize);
@@ -45,7 +45,7 @@ protected:
         scrollBG->setOpacity(100);
         m_mainLayer->addChild(scrollBG);
 
-        // scroll layer
+        // Scroll layer with layout
         auto scrollLayerLayout = ColumnLayout::create()
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAutoGrowAxis(scrollSize.height - 12.5f)
@@ -70,6 +70,7 @@ protected:
 
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
+            // Search filter
             if (!m_searchQuery.empty()) {
                 auto name = mod->getName();
                 auto lowerName = name;
@@ -77,30 +78,29 @@ protected:
                 std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
                 std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
                 if (lowerName.find(lowerQuery) == std::string::npos) {
-                    continue; // skip mods that don’t match search
+                    continue;
                 }
             }
 
             auto item = CCNode::create();
             item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
 
-            // mod name label
+            // Mod name
             auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({ 0.f, 0.5f });
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
             item->addChild(label);
 
-            // view button sprite
+            // View button
             auto btnSprite = ButtonSprite::create("View", "goldFont.fnt", "GJ_button_01.png", 0.6f);
 
-            // menu item
             auto viewBtn = CCMenuItemSpriteExtra::create(
                 btnSprite,
                 this,
                 menu_selector(ModsPopup::onViewMod)
             );
-            viewBtn->setUserObject(mod); // attach mod to button
+            viewBtn->setUserObject(mod);
 
             auto menu = CCMenu::create();
             menu->addChild(viewBtn);
