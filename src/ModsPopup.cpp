@@ -91,13 +91,17 @@ protected:
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
             item->addChild(label);
 
-            // view button
+            // view button sprite
+            auto btnSprite = ButtonSprite::create("View", "goldFont.fnt", "GJ_button_01.png", 0.6f);
+
+            // menu item
             auto viewBtn = CCMenuItemSpriteExtra::create(
-                ButtonSprite::create("View", 0, 0, "goldFont.fnt", "GJ_button_01.png", 0.6f),
-                [mod](CCObject*) {
-                    mod->openInfoPopup();
-                }
+                btnSprite,
+                this,
+                menu_selector(ModsPopup::onViewMod)
             );
+            viewBtn->setUserObject(mod); // attach mod to button
+
             auto menu = CCMenu::create();
             menu->addChild(viewBtn);
             menu->setPosition({
@@ -111,6 +115,14 @@ protected:
 
         m_scrollLayer->m_contentLayer->updateLayout(true);
         m_scrollLayer->scrollToTop();
+    }
+
+    void onViewMod(CCObject* sender) {
+        if (auto btn = static_cast<CCNode*>(sender)) {
+            if (auto mod = static_cast<Mod*>(btn->getUserObject())) {
+                Loader::get()->openInfoPopup(mod);
+            }
+        }
     }
 
 public:
