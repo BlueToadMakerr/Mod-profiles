@@ -1,68 +1,117 @@
 #include <Geode/Geode.hpp>
-#include <Geode/ui/Popup.hpp>
 #include <Geode/loader/Loader.hpp>
-#include <Geode/ui/TextInput.hpp>
+#include <Geode/loader/Mod.hpp>
 
 using namespace geode::prelude;
 
 class ModsPopup : public Popup<> {
 protected:
-    ScrollLayer* m_scroll = nullptr;
-    TextInput* m_searchBar = nullptr;
-    std::vector<Mod*> m_mods;
+    ScrollLayer* m_scrollLayer = nullptr;
+    TextInput* m_searchInput = nullptr;
+    std::string m_searchQuery;
 
     bool setup() override {
-        this->setTitle("Installed Mods");
+        setID("mods-popup"_spr);
+        setTitle("Installed Mods");
 
-        // --- Search bar ---
-        m_searchBar = TextInput::create(250.f, "Search mods...");
-        m_searchBar->setCallback([this](std::string const& text) {
-            this->populateMods(text);
+        auto [widthCS, heightCS] = m_mainLayer->getScaledContentSize();
+
+        // search bar background
+        auto searchBG = CCScale9Sprite::create("square02b_001.png");
+        searchBG->setContentSize({ widthCS - 40.f, 30.f });
+        searchBG->setColor({ 0, 0, 0 });
+        searchBG->setOpacity(100);
+        searchBG->setPosition({ widthCS / 2.f, heightCS - 50.f });
+        m_mainLayer->addChild(searchBG);
+
+        // search input
+        m_searchInput = TextInput::create(widthCS - 60.f, "Search mods...");
+        m_searchInput->setID("search-bar");
+        m_searchInput->setPosition(searchBG->getPosition());
+        m_searchInput->setCallback([this](std::string const& query) {
+            m_searchQuery = query;
+            refreshModList();
         });
-        m_mainLayer->addChildAtPosition(m_searchBar, Anchor::Top, {0, -40});
+        m_mainLayer->addChild(m_searchInput);
 
-        // --- Scroll list ---
-        m_scroll = ScrollLayer::create({300.f, 180.f});
-        m_scroll->setAnchorPoint({0.5f, 0.5f});
-        m_scroll->setPosition(m_mainLayer->getContentSize() / 2);
-        m_mainLayer->addChild(m_scroll);
+        // scroll area background
+        auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 100.f };
+        auto scrollBG = CCScale9Sprite::create("square02b_001.png");
+        scrollBG->setContentSize(scrollSize);
+        scrollBG->setAnchorPoint({ 0.5f, 0.5f });
+        scrollBG->ignoreAnchorPointForPosition(false);
+        scrollBG->setPosition({ widthCS / 2.f, (heightCS / 2.f) - 30.f });
+        scrollBG->setColor({ 0, 0, 0 });
+        scrollBG->setOpacity(100);
+        m_mainLayer->addChild(scrollBG);
 
-        // Populate initially
-        this->populateMods("");
+        // scroll layer
+        auto scrollLayerLayout = ColumnLayout::create()
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoGrowAxis(scrollSize.height - 12.5f)
+            ->setGrowCrossAxis(false)
+            ->setGap(5.f);
 
+        m_scrollLayer = ScrollLayer::create({ scrollSize.width - 12.5f, scrollSize.height - 12.5f });
+        m_scrollLayer->setID("mod-list");
+        m_scrollLayer->setAnchorPoint({ 0.5f, 0.5f });
+        m_scrollLayer->ignoreAnchorPointForPosition(false);
+        m_scrollLayer->setPosition(scrollBG->getPosition());
+
+        m_scrollLayer->m_contentLayer->setLayout(scrollLayerLayout);
+        m_mainLayer->addChild(m_scrollLayer);
+
+        refreshModList();
         return true;
     }
 
-    void populateMods(std::string const& filter) {
-        m_scroll->m_contentLayer->removeAllChildren();
+    void refreshModList() {
+        m_scrollLayer->m_contentLayer->removeAllChildren();
 
-        m_mods.clear();
-        for (auto& mod : Loader::get()->getAllMods()) {
-            if (filter.empty() || mod->getName().find(filter) != std::string::npos) {
-                m_mods.push_back(mod);
+        auto allMods = Loader::get()->getAllMods();
+        for (Mod* mod : allMods) {
+            if (!m_searchQuery.empty()) {
+                auto name = mod->getName();
+                auto lowerName = name;
+                auto lowerQuery = m_searchQuery;
+                std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+                std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+                if (lowerName.find(lowerQuery) == std::string::npos) {
+                    continue; // skip mods that don’t match search
+                }
             }
+
+            auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
+            label->setScale(0.5f);
+            label->setAnchorPoint({ 0.f, 0.5f });
+
+            auto item = CCNode::create();
+            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
+            item->addChild(label);
+            label->setPosition({ 5.f, item->getContentSize().height / 2 });
+
+            m_scrollLayer->m_contentLayer->addChild(item);
         }
 
-        float y = 0.f;
-        for (auto* mod : m_mods) {
-            auto label = CCLabelBMFont::create(
-                fmt::format("{} v{}", mod->getName(), mod->getVersion().toVString()).c_str(),
-                "chatFont.fnt"
-            );
-            label->setAnchorPoint({0, 1});
-            label->setPosition({5, -y});
-            label->setScale(0.6f);
-            m_scroll->m_contentLayer->addChild(label);
-
-            y += 22.f;
-        }
-
-        m_scroll->m_contentLayer->setContentSize({300.f, y});
-        m_scroll->moveToTop();
+        m_scrollLayer->m_contentLayer->updateLayout(true);
+        m_scrollLayer->scrollToTop();
     }
 
 public:
-    static void showPopup() {
-        ModsPopup::create(350.f, 300.f, "GJ_square01.png")->show();
+    static void createPopup() {
+        auto popup = ModsPopup::create(360.f, 300.f, "GJ_square01.png");
+        if (popup) {
+            popup->show();
+        }
+    }
+
+    static ModsPopup* create(float width, float height, const char* spr) {
+        auto ret = new ModsPopup();
+        if (ret && ret->initAnchored(width, height, spr)) {
+            ret->autorelease();
+            return ret;
+        }
+        CC_SAFE_DELETE(ret);
+        return nullptr;
     }
 };
