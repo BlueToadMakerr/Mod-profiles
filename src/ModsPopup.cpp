@@ -124,7 +124,7 @@ protected:
             }
 
             auto item = CCNode::create();
-            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 40.f }); // taller for two buttons
+            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 40.f });
 
             // mod name label
             auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
@@ -145,7 +145,7 @@ protected:
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
             });
-            toggleBtn->setPosition({ -50.f, 0.f }); // top
+            toggleBtn->setPosition({ -50.f, 0.f });
             menu->addChild(toggleBtn);
 
             // View button (bottom)
@@ -153,7 +153,7 @@ protected:
             auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
                 geode::openInfoPopup(mod->getID());
             });
-            viewBtn->setPosition({ 0.f, 0.f }); // bottom
+            viewBtn->setPosition({ 0.f, 0.f });
             menu->addChild(viewBtn);
 
             item->addChild(menu);
@@ -174,8 +174,21 @@ protected:
     }
 
     void saveFile(const std::string& file) {
-        for (auto& [modID, val] : m_modStates) {
-            Mod::get()->setSavedValue("save_" + file + "_" + modID, val ? 1 : 0);
+        auto allMods = Loader::get()->getAllMods();
+        for (Mod* mod : allMods) {
+            if (mod->isInternal()) continue;
+
+            std::string key = "save_" + file + "_" + mod->getID();
+            bool checked;
+
+            // Use user toggled state if available; otherwise, use actual mod state
+            if (m_modStates.count(mod->getID())) {
+                checked = m_modStates[mod->getID()];
+            } else {
+                checked = mod->isOrWillBeEnabled();
+            }
+
+            Mod::get()->setSavedValue(key, checked ? 1 : 0);
         }
     }
 
