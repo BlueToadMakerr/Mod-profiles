@@ -118,32 +118,28 @@ protected:
             selectMenu->addChild(selectBtn);
             item->addChild(selectMenu);
 
-            // Delete button using CCSprite::createWithSpriteFrameName
+            // Delete button using CCSprite and CCMenuItemExt
             auto deleteMenu = CCMenu::create();
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
 
             auto trashSprite = CCSprite::createWithSpriteFrameName("GJ_trashBtn_001.png");
-            auto deleteBtn = CCMenuItemSprite::create(
-                trashSprite,        // normal
-                trashSprite,        // selected
-                [this, file](CCObject*) {
-                    auto delegate = new ConfirmDeleteDelegate([this, file](bool yes) {
-                        if (yes) {
-                            removeSaveFile(file);
-                            refreshFileList();
-                        }
-                    });
+            auto deleteBtn = CCMenuItemExt::createSpriteExtra(trashSprite, [this, file](CCObject*) {
+                auto delegate = new ConfirmDeleteDelegate([this, file](bool yes) {
+                    if (yes) {
+                        removeSaveFile(file);
+                        refreshFileList();
+                    }
+                });
 
-                    // Swap Yes/No: first button = No, second button = Yes
-                    FLAlertLayer::create(
-                        delegate,
-                        "Confirm Delete",
-                        ("Are you sure you want to delete \"" + file + "\"?").c_str(),
-                        "No",
-                        "Yes"
-                    )->show();
-                }
-            );
+                // Swap Yes/No: first button = No, second button = Yes
+                FLAlertLayer::create(
+                    delegate,
+                    "Confirm Delete",
+                    ("Are you sure you want to delete \"" + file + "\"?").c_str(),
+                    "No",
+                    "Yes"
+                )->show();
+            });
 
             deleteMenu->addChild(deleteBtn);
             item->addChild(deleteMenu);
