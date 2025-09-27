@@ -1,8 +1,8 @@
 #include <Geode/Geode.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <Geode/ui/GeodeUI.hpp>
-#include "FileExplorer.cpp" // your FileExplorerPopup
+#include <Geode/ui/GeodeUI.hpp> // for openInfoPopup
+#include "FileExplorer.cpp"      // your FileExplorerPopup
 
 using namespace geode::prelude;
 
@@ -22,21 +22,21 @@ protected:
         // Title
         auto title = CCLabelBMFont::create("Installed Mods", "bigFont.fnt");
         title->setScale(0.6f);
-        title->setPosition({ widthCS/2.f, heightCS-30.f });
+        title->setPosition({ widthCS / 2.f, heightCS - 30.f });
         m_mainLayer->addChild(title);
 
         // Search background
         auto searchBG = CCScale9Sprite::create("square02b_001.png");
         searchBG->setContentSize({ widthCS - 40.f, 30.f });
-        searchBG->setColor({0,0,0});
+        searchBG->setColor({ 0, 0, 0 });
         searchBG->setOpacity(100);
-        searchBG->setPosition({ widthCS/2.f, heightCS-50.f });
+        searchBG->setPosition({ widthCS / 2.f, heightCS - 50.f });
         m_mainLayer->addChild(searchBG);
 
         // Search input
         m_searchInput = TextInput::create(widthCS - 120.f, "Search mods...");
         m_searchInput->setPosition({ searchBG->getPositionX() - 40.f, searchBG->getPositionY() });
-        m_searchInput->setCallback([this](const std::string& query){
+        m_searchInput->setCallback([this](const std::string& query) {
             m_searchQuery = query;
             refreshModList();
         });
@@ -44,8 +44,8 @@ protected:
 
         // Load/Save buttons
         auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-        auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*){
-            FileExplorerPopup::show([this](const std::string& file){
+        auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*) {
+            FileExplorerPopup::show([this](const std::string& file) {
                 m_currentFile = file;
                 loadFile(file);
                 updateCurrentFileLabel();
@@ -54,8 +54,8 @@ protected:
         });
 
         auto saveBtnSpr = ButtonSprite::create("Save", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-        auto saveBtn = CCMenuItemExt::createSpriteExtra(saveBtnSpr, [this](CCObject*){
-            FileExplorerPopup::show([this](const std::string& file){
+        auto saveBtn = CCMenuItemExt::createSpriteExtra(saveBtnSpr, [this](CCObject*) {
+            FileExplorerPopup::show([this](const std::string& file) {
                 m_currentFile = file;
                 saveFile(file);
                 updateCurrentFileLabel();
@@ -73,28 +73,28 @@ protected:
         // Current file label
         m_currentFileLabel = CCLabelBMFont::create("No file selected", "bigFont.fnt");
         m_currentFileLabel->setScale(0.5f);
-        m_currentFileLabel->setPosition({ widthCS/2.f, heightCS-90.f });
+        m_currentFileLabel->setPosition({ widthCS / 2.f, heightCS - 90.f });
         m_mainLayer->addChild(m_currentFileLabel);
 
         // Scroll layer background
         auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 140.f };
         auto scrollBG = CCScale9Sprite::create("square02b_001.png");
         scrollBG->setContentSize(scrollSize);
-        scrollBG->setAnchorPoint({0.5f, 0.5f});
+        scrollBG->setAnchorPoint({ 0.5f, 0.5f });
         scrollBG->ignoreAnchorPointForPosition(false);
-        scrollBG->setPosition({ widthCS/2.f, (heightCS/2.f)-30.f });
-        scrollBG->setColor({0,0,0});
+        scrollBG->setPosition({ widthCS / 2.f, (heightCS / 2.f) - 30.f });
+        scrollBG->setColor({ 0, 0, 0 });
         scrollBG->setOpacity(100);
         m_mainLayer->addChild(scrollBG);
 
         auto scrollLayerLayout = ColumnLayout::create()
             ->setAxisAlignment(AxisAlignment::Start)
-            ->setAutoGrowAxis(scrollSize.height-12.5f)
+            ->setAutoGrowAxis(scrollSize.height - 12.5f)
             ->setGrowCrossAxis(false)
             ->setGap(5.f);
 
-        m_scrollLayer = ScrollLayer::create({ scrollSize.width-12.5f, scrollSize.height-12.5f });
-        m_scrollLayer->setAnchorPoint({0.5f,0.5f});
+        m_scrollLayer = ScrollLayer::create({ scrollSize.width - 12.5f, scrollSize.height - 12.5f });
+        m_scrollLayer->setAnchorPoint({ 0.5f, 0.5f });
         m_scrollLayer->ignoreAnchorPointForPosition(false);
         m_scrollLayer->setPosition(scrollBG->getPosition());
         m_scrollLayer->m_contentLayer->setLayout(scrollLayerLayout);
@@ -110,59 +110,56 @@ protected:
     }
 
     void refreshModList() {
-    m_scrollLayer->m_contentLayer->removeAllChildren();
+        m_scrollLayer->m_contentLayer->removeAllChildren();
 
-            auto allMods = Loader::get()->getAllMods();
-            for (Mod* mod : allMods) {
-                if (!m_searchQuery.empty()) {
-                    auto name = mod->getName();
-                    auto lowerName = name;
-                    auto lowerQuery = m_searchQuery;
-                    std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
-                    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
-                    if (lowerName.find(lowerQuery) == std::string::npos) continue;
-                }
-
-                auto item = CCNode::create();
-                item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 40.f }); // taller for two buttons
-
-                // mod name label
-                auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
-                label->setScale(0.5f);
-                label->setAnchorPoint({ 0.f, 0.5f });
-                label->setPosition({ 5.f, item->getContentSize().height / 2 });
-                item->addChild(label);
-
-                // vertical button menu
-                auto menu = CCMenu::create();
-                menu->setPosition({ item->getContentSize().width - 35.f, item->getContentSize().height / 2 });
-
-                // Enabled/Disabled toggle button (top)
-                std::string modID = mod->getID();
-                bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
-                auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
-                auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*) {
-                    m_modStates[modID] = !m_modStates[modID];
-                    toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
-                });
-                toggleBtn->setPosition({0.f, 7.5f}); // top
-                menu->addChild(toggleBtn);
-
-                // View button (bottom)
-                auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.4f);
-                auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
-                    geode::openInfoPopup(mod->getID());
-                });
-                viewBtn->setPosition({0.f, -7.5f}); // bottom
-                menu->addChild(viewBtn);
-
-                item->addChild(menu);
-                m_scrollLayer->m_contentLayer->addChild(item);
+        auto allMods = Loader::get()->getAllMods();
+        for (Mod* mod : allMods) {
+            if (!m_searchQuery.empty()) {
+                auto name = mod->getName();
+                auto lowerName = name;
+                auto lowerQuery = m_searchQuery;
+                std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+                std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+                if (lowerName.find(lowerQuery) == std::string::npos) continue;
             }
 
-            m_scrollLayer->m_contentLayer->updateLayout(true);
-            m_scrollLayer->scrollToTop();
+            auto item = CCNode::create();
+            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 40.f }); // taller for two buttons
+
+            // mod name label
+            auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
+            label->setScale(0.5f);
+            label->setAnchorPoint({ 0.f, 0.5f });
+            label->setPosition({ 5.f, item->getContentSize().height / 2 });
+            item->addChild(label);
+
+            // vertical button menu
+            auto menu = CCMenu::create();
+            menu->setPosition({ item->getContentSize().width - 35.f, item->getContentSize().height / 2 });
+
+            // Enabled/Disabled toggle button (top)
+            std::string modID = mod->getID();
+            bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
+            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
+            auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*) {
+                m_modStates[modID] = !m_modStates[modID];
+                toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
+            });
+            toggleBtn->setPosition({ 0.f, 7.5f }); // top
+            menu->addChild(toggleBtn);
+
+            // View button (bottom)
+            auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.4f);
+            auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
+                geode::openInfoPopup(mod->getID());
+            });
+            viewBtn->setPosition({ 0.f, -7.5f }); // bottom
+            menu->addChild(viewBtn);
+
+            item->addChild(menu);
+            m_scrollLayer->m_contentLayer->addChild(item);
         }
+
         m_scrollLayer->m_contentLayer->updateLayout(true);
         m_scrollLayer->scrollToTop();
     }
