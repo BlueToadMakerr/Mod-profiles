@@ -101,6 +101,16 @@ protected:
         m_mainLayer->addChild(m_scrollLayer);
 
         refreshModList();
+
+        // Apply button
+        auto applyBtnSpr = ButtonSprite::create("Apply & Restart", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+        auto applyBtn = CCMenuItemExt::createSpriteExtra(applyBtnSpr, [this](CCObject*) {
+            applyModsAndRestart();
+        });
+        auto applyMenu = CCMenu::create(applyBtn, nullptr);
+        applyMenu->setPosition({ widthCS / 2.f, 20.f });
+        m_mainLayer->addChild(applyMenu);
+
         return true;
     }
 
@@ -126,18 +136,15 @@ protected:
             auto item = CCNode::create();
             item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 40.f });
 
-            // mod name label
             auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({ 0.f, 0.5f });
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
             item->addChild(label);
 
-            // vertical button menu
             auto menu = CCMenu::create();
             menu->setPosition({ item->getContentSize().width - 35.f, item->getContentSize().height / 2 });
 
-            // Enabled/Disabled toggle button (top)
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
             auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.2f);
@@ -148,7 +155,6 @@ protected:
             toggleBtn->setPosition({ -50.f, 0.f });
             menu->addChild(toggleBtn);
 
-            // View button (bottom)
             auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.4f);
             auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
                 geode::openInfoPopup(mod->getID());
@@ -181,7 +187,6 @@ protected:
             std::string key = "save_" + file + "_" + mod->getID();
             bool checked;
 
-            // Use user toggled state if available; otherwise, use actual mod state
             if (m_modStates.count(mod->getID())) {
                 checked = m_modStates[mod->getID()];
             } else {
@@ -190,6 +195,22 @@ protected:
 
             Mod::get()->setSavedValue(key, checked ? 1 : 0);
         }
+    }
+
+    void applyModsAndRestart() {
+        auto allMods = Loader::get()->getAllMods();
+        for (Mod* mod : allMods) {
+            if (mod->isInternal()) continue;
+
+            bool enabled = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
+            if (enabled) {
+                mod->enable();
+            } else {
+                mod->disable();
+            }
+        }
+
+        geode::restart(); // Restart the game after applying changes
     }
 
 public:
