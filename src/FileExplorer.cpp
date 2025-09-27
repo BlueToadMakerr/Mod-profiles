@@ -118,10 +118,11 @@ protected:
             selectMenu->addChild(selectBtn);
             item->addChild(selectMenu);
 
-            // Delete button with trash icon only
+            // Delete button with trash icon only from GJ_GameSheet03
             auto deleteMenu = CCMenu::create();
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
-            auto deleteBtnSpr = ButtonSprite::create("", "bigFont.fnt", "trash_01_001.png", 0.5f);
+            auto deleteBtnSpr = ButtonSprite::create("", "bigFont.fnt", "trash_01_001.png", 0.5f, "GJ_GameSheet03.png");
+
             auto deleteBtn = CCMenuItemExt::createSpriteExtra(deleteBtnSpr, [this, file](CCObject*) {
                 auto delegate = new ConfirmDeleteDelegate([this, file](bool yes) {
                     if (yes) { // Yes now correctly deletes
