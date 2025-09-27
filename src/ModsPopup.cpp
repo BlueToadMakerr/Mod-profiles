@@ -139,7 +139,7 @@ protected:
 
             // Enabled/Disabled toggle button (top)
             std::string modID = mod->getID();
-            bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
+            bool checked = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
             auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.2f);
             auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*) {
                 m_modStates[modID] = !m_modStates[modID];
