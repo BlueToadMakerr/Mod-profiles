@@ -1,7 +1,8 @@
 #include <Geode/Geode.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <Geode/ui/GeodeUI.hpp> // for openInfoPopup
+#include <Geode/ui/GeodeUI.hpp>
+#include "FileExplorer.cpp" // your FileExplorerPopup
 
 using namespace geode::prelude;
 
@@ -9,7 +10,11 @@ class ModsPopup : public Popup<> {
 protected:
     ScrollLayer* m_scrollLayer = nullptr;
     TextInput* m_searchInput = nullptr;
+    Label* m_currentFileLabel = nullptr;
+
     std::string m_searchQuery;
+    std::string m_currentFile;
+    std::map<std::string, bool> m_modStates; // modID -> checked state
 
     bool setup() override {
         setID("mods-popup"_spr);
@@ -17,53 +22,87 @@ protected:
 
         auto [widthCS, heightCS] = m_mainLayer->getScaledContentSize();
 
-        // search bar background
+        // Search background
         auto searchBG = CCScale9Sprite::create("square02b_001.png");
         searchBG->setContentSize({ widthCS - 40.f, 30.f });
-        searchBG->setColor({ 0, 0, 0 });
+        searchBG->setColor({ 0,0,0 });
         searchBG->setOpacity(100);
-        searchBG->setPosition({ widthCS / 2.f, heightCS - 50.f });
+        searchBG->setPosition({ widthCS/2.f, heightCS-50.f });
         m_mainLayer->addChild(searchBG);
 
-        // search input
-        m_searchInput = TextInput::create(widthCS - 60.f, "Search mods...");
-        m_searchInput->setID("search-bar");
-        m_searchInput->setPosition(searchBG->getPosition());
-        m_searchInput->setCallback([this](std::string const& query) {
+        // Search input
+        m_searchInput = TextInput::create(widthCS - 120.f, "Search mods...");
+        m_searchInput->setPosition({ searchBG->getPositionX() - 40.f, searchBG->getPositionY() });
+        m_searchInput->setCallback([this](const std::string& query){
             m_searchQuery = query;
             refreshModList();
         });
         m_mainLayer->addChild(m_searchInput);
 
-        // scroll area background
-        auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 100.f };
+        // Load button
+        auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+        auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*){
+            FileExplorerPopup::show([this](const std::string& file){
+                m_currentFile = file;
+                loadFile(file);
+                updateCurrentFileLabel();
+                refreshModList();
+            });
+        });
+        auto saveBtnSpr = ButtonSprite::create("Save", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+        auto saveBtn = CCMenuItemExt::createSpriteExtra(saveBtnSpr, [this](CCObject*){
+            FileExplorerPopup::show([this](const std::string& file){
+                m_currentFile = file;
+                saveFile(file);
+                updateCurrentFileLabel();
+            });
+        });
+
+        auto menu = CCMenu::create();
+        menu->setPosition({ widthCS - 50.f, heightCS - 50.f });
+        menu->addChild(loadBtn);
+        loadBtn->setPositionX(-30.f);
+        menu->addChild(saveBtn);
+        saveBtn->setPositionX(30.f);
+        m_mainLayer->addChild(menu);
+
+        // Current file label
+        m_currentFileLabel = CCLabelBMFont::create("No file selected", "bigFont.fnt");
+        m_currentFileLabel->setScale(0.5f);
+        m_currentFileLabel->setPosition({ widthCS/2.f, heightCS - 90.f });
+        m_mainLayer->addChild(m_currentFileLabel);
+
+        // Scroll layer background
+        auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 140.f };
         auto scrollBG = CCScale9Sprite::create("square02b_001.png");
         scrollBG->setContentSize(scrollSize);
-        scrollBG->setAnchorPoint({ 0.5f, 0.5f });
+        scrollBG->setAnchorPoint({0.5f, 0.5f});
         scrollBG->ignoreAnchorPointForPosition(false);
-        scrollBG->setPosition({ widthCS / 2.f, (heightCS / 2.f) - 30.f });
-        scrollBG->setColor({ 0, 0, 0 });
+        scrollBG->setPosition({ widthCS/2.f, (heightCS/2.f)-30.f });
+        scrollBG->setColor({0,0,0});
         scrollBG->setOpacity(100);
         m_mainLayer->addChild(scrollBG);
 
-        // scroll layer
         auto scrollLayerLayout = ColumnLayout::create()
             ->setAxisAlignment(AxisAlignment::Start)
-            ->setAutoGrowAxis(scrollSize.height - 12.5f)
+            ->setAutoGrowAxis(scrollSize.height-12.5f)
             ->setGrowCrossAxis(false)
             ->setGap(5.f);
 
-        m_scrollLayer = ScrollLayer::create({ scrollSize.width - 12.5f, scrollSize.height - 12.5f });
-        m_scrollLayer->setID("mod-list");
-        m_scrollLayer->setAnchorPoint({ 0.5f, 0.5f });
+        m_scrollLayer = ScrollLayer::create({ scrollSize.width-12.5f, scrollSize.height-12.5f });
+        m_scrollLayer->setAnchorPoint({0.5f,0.5f});
         m_scrollLayer->ignoreAnchorPointForPosition(false);
         m_scrollLayer->setPosition(scrollBG->getPosition());
-
         m_scrollLayer->m_contentLayer->setLayout(scrollLayerLayout);
         m_mainLayer->addChild(m_scrollLayer);
 
         refreshModList();
         return true;
+    }
+
+    void updateCurrentFileLabel() {
+        std::string text = m_currentFile.empty() ? "No file selected" : ("File: " + m_currentFile);
+        m_currentFileLabel->setString(text.c_str());
     }
 
     void refreshModList() {
@@ -72,41 +111,47 @@ protected:
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
             if (!m_searchQuery.empty()) {
-                auto name = mod->getName();
-                auto lowerName = name;
-                auto lowerQuery = m_searchQuery;
+                std::string lowerName = mod->getName();
+                std::string lowerQuery = m_searchQuery;
                 std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
                 std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
-                if (lowerName.find(lowerQuery) == std::string::npos) {
-                    continue; // skip mods that don’t match search
-                }
+                if (lowerName.find(lowerQuery) == std::string::npos)
+                    continue;
             }
 
             auto item = CCNode::create();
             item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
 
-            // mod name label
+            // mod label
             auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
             label->setScale(0.5f);
-            label->setAnchorPoint({ 0.f, 0.5f });
-            label->setPosition({ 5.f, item->getContentSize().height / 2 });
+            label->setAnchorPoint({0.f,0.5f});
+            label->setPosition({5.f, item->getContentSize().height/2});
             item->addChild(label);
 
-            // button menu
+            // button menu (View + toggle)
             auto menu = CCMenu::create();
-            menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
+            menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height/2 });
 
             auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-            auto viewBtn = CCMenuItemExt::createSpriteExtra(
-                viewBtnSpr,
-                [mod](CCObject*) {
-                    // Directly call openInfoPopup; ignore Task<bool> result
-                    geode::openInfoPopup(mod->getID());
-                }
-            );
+            auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*){
+                geode::openInfoPopup(mod->getID());
+            });
             menu->addChild(viewBtn);
-            item->addChild(menu);
+            viewBtn->setPositionX(-15.f);
 
+            // checkmark toggle
+            std::string modID = mod->getID();
+            bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
+            auto toggleBtnSpr = ButtonSprite::create(checked ? "✔" : "✖", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+            auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*){
+                m_modStates[modID] = !m_modStates[modID];
+                toggleBtnSpr->setString(m_modStates[modID] ? "✔" : "✖");
+            });
+            menu->addChild(toggleBtn);
+            toggleBtn->setPositionX(15.f);
+
+            item->addChild(menu);
             m_scrollLayer->m_contentLayer->addChild(item);
         }
 
@@ -114,12 +159,32 @@ protected:
         m_scrollLayer->scrollToTop();
     }
 
+    void loadFile(const std::string& file) {
+        m_modStates.clear();
+        auto allMods = Loader::get()->getAllMods();
+        for (Mod* mod : allMods) {
+            bool val = Mod::get()->getSavedValue<int>("save_" + file + "_" + mod->getID(), 0) != 0;
+            m_modStates[mod->getID()] = val;
+        }
+    }
+
+    void saveFile(const std::string& file) {
+        for (auto& [modID, val] : m_modStates) {
+            Mod::get()->setSavedValue("save_" + file + "_" + modID, val ? 1 : 0);
+        }
+        // update save_files list
+        std::string files = Mod::get()->getSavedValue<std::string>("save_files", "");
+        if (files.find(file) == std::string::npos) {
+            if (!files.empty()) files += ";";
+            files += file;
+            Mod::get()->setSavedValue("save_files", files);
+        }
+    }
+
 public:
     static void showPopup() {
-        auto popup = ModsPopup::create(360.f, 300.f, "GJ_square01.png");
-        if (popup) {
-            popup->show();
-        }
+        auto popup = ModsPopup::create(360.f, 400.f, "GJ_square01.png");
+        if (popup) popup->show();
     }
 
     static ModsPopup* create(float width, float height, const char* spr) {
