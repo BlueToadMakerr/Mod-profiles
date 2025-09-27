@@ -3,6 +3,19 @@
 
 using namespace geode::prelude;
 
+// Delegate for FLAlertLayer confirmation
+class ConfirmDeleteDelegate : public FLAlertLayerProtocol {
+public:
+    std::function<void(bool)> m_callback;
+
+    ConfirmDeleteDelegate(std::function<void(bool)> cb) : m_callback(cb) {}
+
+    void FLAlert_Clicked(FLAlertLayer* layer, bool btn1) override {
+        if (m_callback) m_callback(btn1);
+        layer->removeFromParent();
+    }
+};
+
 class FileExplorerPopup : public Popup<> {
 protected:
     ScrollLayer* m_scrollLayer = nullptr;
@@ -53,11 +66,11 @@ protected:
         m_scrollLayer->ignoreAnchorPointForPosition(false);
         m_scrollLayer->setPosition(scrollBG->getPosition());
 
-        // use column layout so items don’t overlap
+        // Column layout for proper spacing
         m_scrollLayer->m_contentLayer->setLayout(
             ColumnLayout::create()
-                ->setGap(5.f)          // spacing between rows
-                ->setAxisReverse(true) // stack top-to-bottom
+                ->setGap(5.f)
+                ->setAxisReverse(true)
         );
 
         m_mainLayer->addChild(m_scrollLayer);
@@ -105,23 +118,23 @@ protected:
             selectMenu->addChild(selectBtn);
             item->addChild(selectMenu);
 
-            // Delete button
+            // Delete button with confirmation
             auto deleteMenu = CCMenu::create();
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
             auto deleteBtnSpr = ButtonSprite::create("Delete", "bigFont.fnt", "GJ_button_01.png", 0.5f);
             auto deleteBtn = CCMenuItemExt::createSpriteExtra(deleteBtnSpr, [this, file](CCObject*) {
-                // Show confirmation popup
+                auto delegate = new ConfirmDeleteDelegate([this, file](bool yes) {
+                    if (yes) {
+                        removeSaveFile(file);
+                        refreshFileList();
+                    }
+                });
                 FLAlertLayer::create(
+                    delegate,
                     "Confirm Delete",
                     ("Are you sure you want to delete \"" + file + "\"?").c_str(),
                     "Yes",
-                    "No",
-                    [this, file](bool yes) {
-                        if (yes) {
-                            removeSaveFile(file);
-                            refreshFileList();
-                        }
-                    }
+                    "No"
                 )->show();
             });
             deleteMenu->addChild(deleteBtn);
@@ -130,7 +143,6 @@ protected:
             m_scrollLayer->m_contentLayer->addChild(item);
         }
 
-        // let the layout handle positioning
         m_scrollLayer->m_contentLayer->updateLayout();
         m_scrollLayer->scrollToTop();
     }
