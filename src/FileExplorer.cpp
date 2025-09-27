@@ -118,28 +118,33 @@ protected:
             selectMenu->addChild(selectBtn);
             item->addChild(selectMenu);
 
-            // Delete button with trash icon only from GJ_GameSheet03
+            // Delete button using CCSprite::createWithSpriteFrameName
             auto deleteMenu = CCMenu::create();
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
-            auto deleteBtnSpr = ButtonSprite::create("", "bigFont.fnt", "trash_01_001.png", 0.5f, "GJ_GameSheet03.png");
 
-            auto deleteBtn = CCMenuItemExt::createSpriteExtra(deleteBtnSpr, [this, file](CCObject*) {
-                auto delegate = new ConfirmDeleteDelegate([this, file](bool yes) {
-                    if (yes) { // Yes now correctly deletes
-                        removeSaveFile(file);
-                        refreshFileList();
-                    }
-                });
+            auto trashSprite = CCSprite::createWithSpriteFrameName("GJ_trashBtn_001.png");
+            auto deleteBtn = CCMenuItemSprite::create(
+                trashSprite,        // normal
+                trashSprite,        // selected
+                [this, file](CCObject*) {
+                    auto delegate = new ConfirmDeleteDelegate([this, file](bool yes) {
+                        if (yes) {
+                            removeSaveFile(file);
+                            refreshFileList();
+                        }
+                    });
 
-                // Swap Yes/No: first button = No, second button = Yes
-                FLAlertLayer::create(
-                    delegate,
-                    "Confirm Delete",
-                    ("Are you sure you want to delete \"" + file + "\"?").c_str(),
-                    "No",
-                    "Yes"
-                )->show();
-            });
+                    // Swap Yes/No: first button = No, second button = Yes
+                    FLAlertLayer::create(
+                        delegate,
+                        "Confirm Delete",
+                        ("Are you sure you want to delete \"" + file + "\"?").c_str(),
+                        "No",
+                        "Yes"
+                    )->show();
+                }
+            );
+
             deleteMenu->addChild(deleteBtn);
             item->addChild(deleteMenu);
 
