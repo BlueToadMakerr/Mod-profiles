@@ -144,10 +144,10 @@ protected:
 
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
-            auto toggleBtnSpr = ButtonSprite::create(checked ? "✔" : "✖", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.5f);
             auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*){
                 m_modStates[modID] = !m_modStates[modID];
-                toggleBtnSpr->setString(m_modStates[modID] ? "✔" : "✖");
+                toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
             });
             menu->addChild(toggleBtn);
             toggleBtn->setPositionX(15.f);
