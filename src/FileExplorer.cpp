@@ -1,6 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/ui/GeodeUI.hpp>
-#include <Geode/loader/Mod.hpp>
 
 using namespace geode::prelude;
 
@@ -27,6 +26,7 @@ protected:
         auto createBtn = CCMenuItemExt::createSpriteExtra(createBtnSpr, [this](CCObject*) {
             auto name = m_fileNameInput->getString();
             if (!name.empty()) {
+                addSaveFile(name);
                 m_selectedFile = name;
                 if (m_callback) m_callback(m_selectedFile);
                 this->removeFromParent();
@@ -37,7 +37,7 @@ protected:
         menu->addChild(createBtn);
         m_mainLayer->addChild(menu);
 
-        // Scroll area
+        // Scroll area for existing files
         auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 140.f };
         auto scrollBG = CCScale9Sprite::create("square02b_001.png");
         scrollBG->setContentSize(scrollSize);
@@ -61,15 +61,25 @@ protected:
     void refreshFileList() {
         m_scrollLayer->m_contentLayer->removeAllChildren();
 
-        // Load save files from mod save
-        auto saveData = Mod::get()->getSave()->getValue("saves");
-        if (!saveData.isObject()) saveData = geode::Value::object();
+        // Get save file list from mod saved data
+        std::string filesStr = Mod::get()->getSavedValue<std::string>("save_files", "");
+        std::vector<std::string> files;
+        size_t pos = 0;
+        while (true) {
+            size_t next = filesStr.find(';', pos);
+            if (next == std::string::npos) {
+                if (pos < filesStr.size()) files.push_back(filesStr.substr(pos));
+                break;
+            }
+            files.push_back(filesStr.substr(pos, next - pos));
+            pos = next + 1;
+        }
 
-        for (auto& [key, _] : saveData.getObject()) {
+        for (auto& file : files) {
             auto item = CCNode::create();
             item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
 
-            auto label = CCLabelBMFont::create(key.c_str(), "bigFont.fnt");
+            auto label = CCLabelBMFont::create(file.c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({ 0.f, 0.5f });
             label->setPosition({ 5.f, 12.5f });
@@ -79,8 +89,8 @@ protected:
             menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
 
             auto selectBtnSpr = ButtonSprite::create("Select", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-            auto selectBtn = CCMenuItemExt::createSpriteExtra(selectBtnSpr, [this, key](CCObject*) {
-                m_selectedFile = key;
+            auto selectBtn = CCMenuItemExt::createSpriteExtra(selectBtnSpr, [this, file](CCObject*) {
+                m_selectedFile = file;
                 if (m_callback) m_callback(m_selectedFile);
                 this->removeFromParent();
             });
@@ -92,6 +102,13 @@ protected:
 
         m_scrollLayer->m_contentLayer->updateLayout(true);
         m_scrollLayer->scrollToTop();
+    }
+
+    void addSaveFile(const std::string& name) {
+        std::string filesStr = Mod::get()->getSavedValue<std::string>("save_files", "");
+        if (!filesStr.empty()) filesStr += ";";
+        filesStr += name;
+        Mod::get()->setSavedValue("save_files", filesStr);
     }
 
 public:
