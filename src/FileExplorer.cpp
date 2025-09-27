@@ -93,17 +93,39 @@ protected:
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
             item->addChild(label);
 
-            auto menu = CCMenu::create();
-            menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
-
+            // Select button
+            auto selectMenu = CCMenu::create();
+            selectMenu->setPosition({ item->getContentSize().width - 90.f, item->getContentSize().height / 2 });
             auto selectBtnSpr = ButtonSprite::create("Select", "bigFont.fnt", "GJ_button_01.png", 0.5f);
             auto selectBtn = CCMenuItemExt::createSpriteExtra(selectBtnSpr, [this, file](CCObject*) {
                 m_selectedFile = file;
                 if (m_callback) m_callback(m_selectedFile);
                 this->removeFromParent();
             });
-            menu->addChild(selectBtn);
-            item->addChild(menu);
+            selectMenu->addChild(selectBtn);
+            item->addChild(selectMenu);
+
+            // Delete button
+            auto deleteMenu = CCMenu::create();
+            deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
+            auto deleteBtnSpr = ButtonSprite::create("Delete", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+            auto deleteBtn = CCMenuItemExt::createSpriteExtra(deleteBtnSpr, [this, file](CCObject*) {
+                // Show confirmation popup
+                FLAlertLayer::create(
+                    "Confirm Delete",
+                    ("Are you sure you want to delete \"" + file + "\"?").c_str(),
+                    "Yes",
+                    "No",
+                    [this, file](bool yes) {
+                        if (yes) {
+                            removeSaveFile(file);
+                            refreshFileList();
+                        }
+                    }
+                )->show();
+            });
+            deleteMenu->addChild(deleteBtn);
+            item->addChild(deleteMenu);
 
             m_scrollLayer->m_contentLayer->addChild(item);
         }
@@ -118,6 +140,30 @@ protected:
         if (!filesStr.empty()) filesStr += ";";
         filesStr += name;
         Mod::get()->setSavedValue("save_files", filesStr);
+    }
+
+    void removeSaveFile(const std::string& name) {
+        std::string filesStr = Mod::get()->getSavedValue<std::string>("save_files", "");
+        std::vector<std::string> files;
+        size_t pos = 0;
+        while (true) {
+            size_t next = filesStr.find(';', pos);
+            if (next == std::string::npos) {
+                if (pos < filesStr.size()) files.push_back(filesStr.substr(pos));
+                break;
+            }
+            files.push_back(filesStr.substr(pos, next - pos));
+            pos = next + 1;
+        }
+
+        files.erase(std::remove(files.begin(), files.end(), name), files.end());
+
+        std::string newFilesStr;
+        for (size_t i = 0; i < files.size(); ++i) {
+            if (i != 0) newFilesStr += ";";
+            newFilesStr += files[i];
+        }
+        Mod::get()->setSavedValue("save_files", newFilesStr);
     }
 
 public:
