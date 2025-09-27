@@ -22,7 +22,7 @@ protected:
         // Title
         auto title = CCLabelBMFont::create("Installed Mods", "bigFont.fnt");
         title->setScale(0.6f);
-        title->setPosition({ widthCS / 2.f, heightCS - 30.f });
+        title->setPosition({ widthCS / 2.f, heightCS - 20.f });
         m_mainLayer->addChild(title);
 
         // Search background
@@ -43,7 +43,7 @@ protected:
         m_mainLayer->addChild(m_searchInput);
 
         // Load/Save buttons
-        auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+        auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.3f);
         auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*) {
             FileExplorerPopup::show([this](const std::string& file) {
                 m_currentFile = file;
@@ -53,7 +53,7 @@ protected:
             });
         });
 
-        auto saveBtnSpr = ButtonSprite::create("Save", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+        auto saveBtnSpr = ButtonSprite::create("Save", "bigFont.fnt", "GJ_button_01.png", 0.3f);
         auto saveBtn = CCMenuItemExt::createSpriteExtra(saveBtnSpr, [this](CCObject*) {
             FileExplorerPopup::show([this](const std::string& file) {
                 m_currentFile = file;
@@ -147,7 +147,7 @@ protected:
 
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
-            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.2f);
+            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
             auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*) {
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
