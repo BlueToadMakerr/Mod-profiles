@@ -52,6 +52,14 @@ protected:
         m_scrollLayer->setAnchorPoint({ 0.5f, 0.5f });
         m_scrollLayer->ignoreAnchorPointForPosition(false);
         m_scrollLayer->setPosition(scrollBG->getPosition());
+
+        // use column layout so items don’t overlap
+        m_scrollLayer->m_contentLayer->setLayout(
+            ColumnLayout::create()
+                ->setGap(5.f)          // spacing between rows
+                ->setAxisReverse(true) // stack top-to-bottom
+        );
+
         m_mainLayer->addChild(m_scrollLayer);
 
         refreshFileList();
@@ -77,12 +85,12 @@ protected:
 
         for (auto& file : files) {
             auto item = CCNode::create();
-            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
+            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 30.f });
 
             auto label = CCLabelBMFont::create(file.c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({ 0.f, 0.5f });
-            label->setPosition({ 5.f, 12.5f });
+            label->setPosition({ 5.f, item->getContentSize().height / 2 });
             item->addChild(label);
 
             auto menu = CCMenu::create();
@@ -100,7 +108,8 @@ protected:
             m_scrollLayer->m_contentLayer->addChild(item);
         }
 
-        m_scrollLayer->m_contentLayer->updateLayout(true);
+        // let the layout handle positioning
+        m_scrollLayer->m_contentLayer->updateLayout();
         m_scrollLayer->scrollToTop();
     }
 
