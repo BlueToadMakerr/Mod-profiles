@@ -118,23 +118,25 @@ protected:
             selectMenu->addChild(selectBtn);
             item->addChild(selectMenu);
 
-            // Delete button with confirmation
+            // Delete button with trash icon only
             auto deleteMenu = CCMenu::create();
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
-            auto deleteBtnSpr = ButtonSprite::create("Delete", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+            auto deleteBtnSpr = ButtonSprite::create("", "bigFont.fnt", "trash_01_001.png", 0.5f);
             auto deleteBtn = CCMenuItemExt::createSpriteExtra(deleteBtnSpr, [this, file](CCObject*) {
                 auto delegate = new ConfirmDeleteDelegate([this, file](bool yes) {
-                    if (yes) {
+                    if (yes) { // Yes now correctly deletes
                         removeSaveFile(file);
                         refreshFileList();
                     }
                 });
+
+                // Swap Yes/No: first button = No, second button = Yes
                 FLAlertLayer::create(
                     delegate,
                     "Confirm Delete",
                     ("Are you sure you want to delete \"" + file + "\"?").c_str(),
-                    "Yes",
-                    "No"
+                    "No",
+                    "Yes"
                 )->show();
             });
             deleteMenu->addChild(deleteBtn);
