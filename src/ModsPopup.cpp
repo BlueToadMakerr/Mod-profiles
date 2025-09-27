@@ -10,22 +10,25 @@ class ModsPopup : public Popup<> {
 protected:
     ScrollLayer* m_scrollLayer = nullptr;
     TextInput* m_searchInput = nullptr;
-    Label* m_currentFileLabel = nullptr;
+    CCLabelBMFont* m_currentFileLabel = nullptr;
 
     std::string m_searchQuery;
     std::string m_currentFile;
     std::map<std::string, bool> m_modStates; // modID -> checked state
 
     bool setup() override {
-        setID("mods-popup"_spr);
-        setTitle("Installed Mods");
-
         auto [widthCS, heightCS] = m_mainLayer->getScaledContentSize();
+
+        // Title
+        auto title = CCLabelBMFont::create("Installed Mods", "bigFont.fnt");
+        title->setScale(0.6f);
+        title->setPosition({ widthCS/2.f, heightCS-30.f });
+        m_mainLayer->addChild(title);
 
         // Search background
         auto searchBG = CCScale9Sprite::create("square02b_001.png");
         searchBG->setContentSize({ widthCS - 40.f, 30.f });
-        searchBG->setColor({ 0,0,0 });
+        searchBG->setColor({0,0,0});
         searchBG->setOpacity(100);
         searchBG->setPosition({ widthCS/2.f, heightCS-50.f });
         m_mainLayer->addChild(searchBG);
@@ -39,7 +42,7 @@ protected:
         });
         m_mainLayer->addChild(m_searchInput);
 
-        // Load button
+        // Load/Save buttons
         auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.5f);
         auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*){
             FileExplorerPopup::show([this](const std::string& file){
@@ -49,6 +52,7 @@ protected:
                 refreshModList();
             });
         });
+
         auto saveBtnSpr = ButtonSprite::create("Save", "bigFont.fnt", "GJ_button_01.png", 0.5f);
         auto saveBtn = CCMenuItemExt::createSpriteExtra(saveBtnSpr, [this](CCObject*){
             FileExplorerPopup::show([this](const std::string& file){
@@ -69,7 +73,7 @@ protected:
         // Current file label
         m_currentFileLabel = CCLabelBMFont::create("No file selected", "bigFont.fnt");
         m_currentFileLabel->setScale(0.5f);
-        m_currentFileLabel->setPosition({ widthCS/2.f, heightCS - 90.f });
+        m_currentFileLabel->setPosition({ widthCS/2.f, heightCS-90.f });
         m_mainLayer->addChild(m_currentFileLabel);
 
         // Scroll layer background
@@ -107,8 +111,8 @@ protected:
 
     void refreshModList() {
         m_scrollLayer->m_contentLayer->removeAllChildren();
-
         auto allMods = Loader::get()->getAllMods();
+
         for (Mod* mod : allMods) {
             if (!m_searchQuery.empty()) {
                 std::string lowerName = mod->getName();
@@ -122,25 +126,22 @@ protected:
             auto item = CCNode::create();
             item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
 
-            // mod label
             auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({0.f,0.5f});
             label->setPosition({5.f, item->getContentSize().height/2});
             item->addChild(label);
 
-            // button menu (View + toggle)
             auto menu = CCMenu::create();
             menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height/2 });
 
             auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.5f);
             auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*){
-                geode::openInfoPopup(mod->getID());
+                (void)geode::openInfoPopup(mod->getID());
             });
             menu->addChild(viewBtn);
             viewBtn->setPositionX(-15.f);
 
-            // checkmark toggle
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
             auto toggleBtnSpr = ButtonSprite::create(checked ? "✔" : "✖", "bigFont.fnt", "GJ_button_01.png", 0.5f);
@@ -171,13 +172,6 @@ protected:
     void saveFile(const std::string& file) {
         for (auto& [modID, val] : m_modStates) {
             Mod::get()->setSavedValue("save_" + file + "_" + modID, val ? 1 : 0);
-        }
-        // update save_files list
-        std::string files = Mod::get()->getSavedValue<std::string>("save_files", "");
-        if (files.find(file) == std::string::npos) {
-            if (!files.empty()) files += ";";
-            files += file;
-            Mod::get()->setSavedValue("save_files", files);
         }
     }
 
