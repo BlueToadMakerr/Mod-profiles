@@ -29,7 +29,7 @@ protected:
             if (!name.empty()) {
                 m_selectedFile = name;
                 if (m_callback) m_callback(m_selectedFile);
-                this->dismiss();
+                this->removeFromParent();
             }
         });
         auto menu = CCMenu::create();
@@ -37,7 +37,7 @@ protected:
         menu->addChild(createBtn);
         m_mainLayer->addChild(menu);
 
-        // Scroll area for existing save files
+        // Scroll area
         auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 140.f };
         auto scrollBG = CCScale9Sprite::create("square02b_001.png");
         scrollBG->setContentSize(scrollSize);
@@ -61,9 +61,9 @@ protected:
     void refreshFileList() {
         m_scrollLayer->m_contentLayer->removeAllChildren();
 
-        // Load all save file names from the mod save data
-        auto saveData = Mod::get()->save()->getValue("saves");
-        if (!saveData.isObject()) saveData = geode::ObjectValue{};
+        // Load save files from mod save
+        auto saveData = Mod::get()->getSave()->getValue("saves");
+        if (!saveData.isObject()) saveData = geode::Value::object();
 
         for (auto& [key, _] : saveData.getObject()) {
             auto item = CCNode::create();
@@ -82,7 +82,7 @@ protected:
             auto selectBtn = CCMenuItemExt::createSpriteExtra(selectBtnSpr, [this, key](CCObject*) {
                 m_selectedFile = key;
                 if (m_callback) m_callback(m_selectedFile);
-                this->dismiss();
+                this->removeFromParent();
             });
             menu->addChild(selectBtn);
             item->addChild(menu);
