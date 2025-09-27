@@ -140,12 +140,12 @@ protected:
             // Enabled/Disabled toggle button (top)
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
-            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
+            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.2f);
             auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*) {
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
             });
-            toggleBtn->setPosition({ 0.f, 7.5f }); // top
+            toggleBtn->setPosition({ -10.f, 0.f }); // top
             menu->addChild(toggleBtn);
 
             // View button (bottom)
@@ -153,7 +153,7 @@ protected:
             auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
                 geode::openInfoPopup(mod->getID());
             });
-            viewBtn->setPosition({ 0.f, -7.5f }); // bottom
+            viewBtn->setPosition({ 0.f, 0.f }); // bottom
             menu->addChild(viewBtn);
 
             item->addChild(menu);
