@@ -67,7 +67,7 @@ protected:
         menu->addChild(loadBtn);
         loadBtn->setPositionX(-30.f);
         menu->addChild(saveBtn);
-        saveBtn->setPositionX(25.f);
+        saveBtn->setPositionX(20.f);
         m_mainLayer->addChild(menu);
 
         // Current file label
@@ -152,7 +152,7 @@ protected:
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
             });
-            toggleBtn->setPosition({ -60.f, 0.f });
+            toggleBtn->setPosition({ -65.f, 0.f });
             menu->addChild(toggleBtn);
 
             auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.4f);
