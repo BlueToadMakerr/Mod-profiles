@@ -29,7 +29,7 @@ protected:
             if (!name.empty()) {
                 m_selectedFile = name;
                 if (m_callback) m_callback(m_selectedFile);
-                this->close();
+                this->dismiss();
             }
         });
         auto menu = CCMenu::create();
@@ -62,8 +62,8 @@ protected:
         m_scrollLayer->m_contentLayer->removeAllChildren();
 
         // Load all save file names from the mod save data
-        auto saveData = Mod::get()->getSave()->getValue("saves");
-        if (!saveData.isObject()) saveData = geode::Value(geode::Object{});
+        auto saveData = Mod::get()->save()->getValue("saves");
+        if (!saveData.isObject()) saveData = geode::ObjectValue{};
 
         for (auto& [key, _] : saveData.getObject()) {
             auto item = CCNode::create();
@@ -82,7 +82,7 @@ protected:
             auto selectBtn = CCMenuItemExt::createSpriteExtra(selectBtnSpr, [this, key](CCObject*) {
                 m_selectedFile = key;
                 if (m_callback) m_callback(m_selectedFile);
-                this->close();
+                this->dismiss();
             });
             menu->addChild(selectBtn);
             item->addChild(menu);
