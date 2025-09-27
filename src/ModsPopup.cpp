@@ -153,7 +153,7 @@ protected:
             auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
                 geode::openInfoPopup(mod->getID());
             });
-            viewBtn->setPosition({ 15.f, 0.f }); // bottom
+            viewBtn->setPosition({ 0.f, 0.f }); // bottom
             menu->addChild(viewBtn);
 
             item->addChild(menu);
