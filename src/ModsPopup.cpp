@@ -1,7 +1,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <Geode/ui/GeodeUI.hpp>
+#include <Geode/ui/GeodeUI.hpp> // for openInfoPopup
 
 using namespace geode::prelude;
 
@@ -100,16 +100,8 @@ protected:
             auto viewBtn = CCMenuItemExt::createSpriteExtra(
                 viewBtnSpr,
                 [mod](CCObject*) {
-                    // Correctly handle Task<bool> return from openInfoPopup
-                    geode::openInfoPopup(mod->getID()).then([](bool success) {
-                        if (!success) {
-                            FLAlertLayer::create(
-                                "Error",
-                                "Could not open info popup for this mod.",
-                                "OK"
-                            )->show();
-                        }
-                    });
+                    // Directly call openInfoPopup; ignore Task<bool> result
+                    geode::openInfoPopup(mod->getID());
                 }
             );
             menu->addChild(viewBtn);
