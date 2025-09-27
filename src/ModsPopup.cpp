@@ -202,7 +202,7 @@ protected:
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
 
-            bool enabled =     m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
+            bool enabled = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
             if (enabled) {
                 (void)mod->enable();
             } else {
