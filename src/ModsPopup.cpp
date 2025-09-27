@@ -145,7 +145,7 @@ protected:
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
             });
-            toggleBtn->setPosition({ -10.f, 0.f }); // top
+            toggleBtn->setPosition({ -150.f, 0.f }); // top
             menu->addChild(toggleBtn);
 
             // View button (bottom)
