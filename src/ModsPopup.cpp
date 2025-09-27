@@ -110,52 +110,59 @@ protected:
     }
 
     void refreshModList() {
-        m_scrollLayer->m_contentLayer->removeAllChildren();
-        auto allMods = Loader::get()->getAllMods();
+    m_scrollLayer->m_contentLayer->removeAllChildren();
 
-        for (Mod* mod : allMods) {
-            if (!m_searchQuery.empty()) {
-                std::string lowerName = mod->getName();
-                std::string lowerQuery = m_searchQuery;
-                std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
-                std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
-                if (lowerName.find(lowerQuery) == std::string::npos)
-                    continue;
+            auto allMods = Loader::get()->getAllMods();
+            for (Mod* mod : allMods) {
+                if (!m_searchQuery.empty()) {
+                    auto name = mod->getName();
+                    auto lowerName = name;
+                    auto lowerQuery = m_searchQuery;
+                    std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
+                    std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
+                    if (lowerName.find(lowerQuery) == std::string::npos) continue;
+                }
+
+                auto item = CCNode::create();
+                item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 40.f }); // taller for two buttons
+
+                // mod name label
+                auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
+                label->setScale(0.5f);
+                label->setAnchorPoint({ 0.f, 0.5f });
+                label->setPosition({ 5.f, item->getContentSize().height / 2 });
+                item->addChild(label);
+
+                // vertical button menu
+                auto menu = CCMenu::create();
+                menu->setPosition({ item->getContentSize().width - 35.f, item->getContentSize().height / 2 });
+
+                // Enabled/Disabled toggle button (top)
+                std::string modID = mod->getID();
+                bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
+                auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
+                auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*) {
+                    m_modStates[modID] = !m_modStates[modID];
+                    toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
+                });
+                toggleBtn->setPosition({0.f, 7.5f}); // top
+                menu->addChild(toggleBtn);
+
+                // View button (bottom)
+                auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.4f);
+                auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
+                    geode::openInfoPopup(mod->getID());
+                });
+                viewBtn->setPosition({0.f, -7.5f}); // bottom
+                menu->addChild(viewBtn);
+
+                item->addChild(menu);
+                m_scrollLayer->m_contentLayer->addChild(item);
             }
 
-            auto item = CCNode::create();
-            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
-
-            auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
-            label->setScale(0.5f);
-            label->setAnchorPoint({0.f,0.5f});
-            label->setPosition({5.f, item->getContentSize().height/2});
-            item->addChild(label);
-
-            auto menu = CCMenu::create();
-            menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height/2 });
-
-            auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-            auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*){
-                (void)geode::openInfoPopup(mod->getID());
-            });
-            menu->addChild(viewBtn);
-            viewBtn->setPositionX(-15.f);
-
-            std::string modID = mod->getID();
-            bool checked = m_modStates.count(modID) ? m_modStates[modID] : false;
-            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-            auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*){
-                m_modStates[modID] = !m_modStates[modID];
-                toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
-            });
-            menu->addChild(toggleBtn);
-            toggleBtn->setPositionX(15.f);
-
-            item->addChild(menu);
-            m_scrollLayer->m_contentLayer->addChild(item);
+            m_scrollLayer->m_contentLayer->updateLayout(true);
+            m_scrollLayer->scrollToTop();
         }
-
         m_scrollLayer->m_contentLayer->updateLayout(true);
         m_scrollLayer->scrollToTop();
     }
