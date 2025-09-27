@@ -117,7 +117,7 @@ public:
         if (popup && popup->initAnchored(360.f, 300.f, "GJ_square01.png")) {
             popup->m_callback = callback;
             popup->autorelease();
-            popup->show();
+            popup->Popup<>::show();
         } else {
             CC_SAFE_DELETE(popup);
         }
