@@ -1,7 +1,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <Geode/ui/GeodeUI.hpp> // for openInfoPopup
+#include <Geode/ui/GeodeUI.hpp>
 
 using namespace geode::prelude;
 
@@ -97,10 +97,19 @@ protected:
             menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
 
             auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-            auto viewBtn = CCMenuItemExt::createSpriteExtra(
+            auto viewBtn = CCMenuItemSpriteExtra::create(
                 viewBtnSpr,
+                this,
                 [mod](CCObject*) {
-                    geode::ui::openInfoPopup(mod->getID());
+                    geode::openInfoPopup(mod->getID()).then([](bool success) {
+                        if (!success) {
+                            FLAlertLayer::create(
+                                "Error",
+                                "Could not open info popup for this mod.",
+                                "OK"
+                            )->show();
+                        }
+                    });
                 }
             );
             menu->addChild(viewBtn);
