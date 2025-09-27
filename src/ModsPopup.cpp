@@ -97,10 +97,10 @@ protected:
             menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
 
             auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-            auto viewBtn = CCMenuItemSpriteExtra::create(
+            auto viewBtn = CCMenuItemExt::createSpriteExtra(
                 viewBtnSpr,
-                this,
                 [mod](CCObject*) {
+                    // Correctly handle Task<bool> return from openInfoPopup
                     geode::openInfoPopup(mod->getID()).then([](bool success) {
                         if (!success) {
                             FLAlertLayer::create(
