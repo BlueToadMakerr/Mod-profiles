@@ -202,16 +202,16 @@ protected:
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
 
-            bool enabled = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
+            bool enabled =     m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
             if (enabled) {
-                mod->enable();
+                (void)mod->enable();
             } else {
-                mod->disable();
+                (void)mod->disable();
             }
         }
 
-        geode::restart(); // Restart the game after applying changes
-    }
+    geode::utils::game::restart(); // restart the game after applying changes
+}
 
 public:
     static void showPopup() {
