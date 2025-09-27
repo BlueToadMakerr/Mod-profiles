@@ -81,14 +81,30 @@ protected:
                 }
             }
 
+            auto item = CCNode::create();
+            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
+
+            // mod name label
             auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({ 0.f, 0.5f });
-
-            auto item = CCNode::create();
-            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 25.f });
-            item->addChild(label);
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
+            item->addChild(label);
+
+            // button menu
+            auto menu = CCMenu::create();
+            menu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
+
+            auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+            auto viewBtn = CCMenuItemSpriteExtra::create(
+                viewBtnSpr,
+                this,
+                [mod](CCObject*) {
+                    geode::openInfoPopup(mod->getID()); // <- uses mod ID
+                }
+            );
+            menu->addChild(viewBtn);
+            item->addChild(menu);
 
             m_scrollLayer->m_contentLayer->addChild(item);
         }
