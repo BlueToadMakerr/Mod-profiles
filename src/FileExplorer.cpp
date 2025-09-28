@@ -66,7 +66,7 @@ protected:
         m_scrollLayer->ignoreAnchorPointForPosition(false);
         m_scrollLayer->setPosition(scrollBG->getPosition());
 
-        // Column layout for proper spacing
+        // Column layout (keeps spacing but doesn’t resize items)
         m_scrollLayer->m_contentLayer->setLayout(
             ColumnLayout::create()
                 ->setGap(5.f)
@@ -97,9 +97,11 @@ protected:
         }
 
         for (auto& file : files) {
+            // Fixed item size (no scaling with scroll size)
             auto item = CCNode::create();
-            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 30.f });
+            item->setContentSize({ 320.f, 30.f });
 
+            // File label
             auto label = CCLabelBMFont::create(file.c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({ 0.f, 0.5f });
@@ -118,7 +120,7 @@ protected:
             selectMenu->addChild(selectBtn);
             item->addChild(selectMenu);
 
-            // Delete button using CCSprite and CCMenuItemExt
+            // Delete button (trash icon)
             auto deleteMenu = CCMenu::create();
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
 
@@ -131,7 +133,7 @@ protected:
                     }
                 });
 
-                // Swap Yes/No: first button = No, second button = Yes
+                // Swap Yes/No (first button = No, second = Yes)
                 FLAlertLayer::create(
                     delegate,
                     "Confirm Delete",
@@ -147,6 +149,7 @@ protected:
             m_scrollLayer->m_contentLayer->addChild(item);
         }
 
+        // Update layout and scroll
         m_scrollLayer->m_contentLayer->updateLayout();
         m_scrollLayer->scrollToTop();
     }
