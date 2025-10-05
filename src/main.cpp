@@ -1,6 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/MenuLayer.hpp>
-#include <Geode/modify/ModsLayer.hpp>
 #include "ModsPopup.cpp"
 
 using namespace geode::prelude;
