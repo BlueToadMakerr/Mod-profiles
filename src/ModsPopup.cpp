@@ -69,8 +69,8 @@ protected:
 
         auto menu = CCMenu::create();
         menu->setPosition({ widthCS - 50.f, heightCS - 50.f });
-        loadBtn->setPositionX(-80.f);
-        saveBtn->setPositionX(-30.f);
+        loadBtn->setPositionX(-100.f);
+        saveBtn->setPositionX(-50.f);
         toggleAllBtn->setPositionX(10.f);
         menu->addChild(loadBtn);
         menu->addChild(saveBtn);
