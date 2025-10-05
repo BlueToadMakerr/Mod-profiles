@@ -70,11 +70,11 @@ protected:
         auto menu = CCMenu::create();
         menu->setPosition({ widthCS - 80.f, heightCS - 50.f });
         menu->addChild(loadBtn);
-        loadBtn->setPositionX(-95.f);
+        loadBtn->setPositionX(-90.f);
         menu->addChild(saveBtn);
-        saveBtn->setPositionX(-50.f);
+        saveBtn->setPositionX(-45.f);
         menu->addChild(toggleAllBtn);
-        toggleAllBtn->setPositionX(10.f);
+        toggleAllBtn->setPositionX(15.f);
         m_mainLayer->addChild(menu);
 
         // Current file label
