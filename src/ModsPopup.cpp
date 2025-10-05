@@ -2,7 +2,8 @@
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
 #include <Geode/ui/GeodeUI.hpp> // for openInfoPopup
-#include "FileExplorer.cpp"      // your FileExplorerPopup
+#include <Geode/utils/game.hpp> // for restart()
+#include "FileExplorer.cpp"
 
 using namespace geode::prelude;
 
@@ -42,7 +43,7 @@ protected:
         });
         m_mainLayer->addChild(m_searchInput);
 
-        // Load/Save buttons
+        // Buttons: Load, Save, Toggle All
         auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.3f);
         auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*) {
             FileExplorerPopup::show([this](const std::string& file) {
@@ -62,12 +63,19 @@ protected:
             });
         });
 
+        auto toggleAllSpr = ButtonSprite::create("Toggle All", "bigFont.fnt", "GJ_button_01.png", 0.3f);
+        auto toggleAllBtn = CCMenuItemExt::createSpriteExtra(toggleAllSpr, [this](CCObject*) {
+            toggleAllMods();
+        });
+
         auto menu = CCMenu::create();
         menu->setPosition({ widthCS - 50.f, heightCS - 50.f });
+        loadBtn->setPositionX(-60.f);
+        saveBtn->setPositionX(-10.f);
+        toggleAllBtn->setPositionX(40.f);
         menu->addChild(loadBtn);
-        loadBtn->setPositionX(-30.f);
         menu->addChild(saveBtn);
-        saveBtn->setPositionX(20.f);
+        menu->addChild(toggleAllBtn);
         m_mainLayer->addChild(menu);
 
         // Current file label
@@ -102,7 +110,7 @@ protected:
 
         refreshModList();
 
-        // Apply button
+        // Apply button (bottom center)
         auto applyBtnSpr = ButtonSprite::create("Apply & Restart", "bigFont.fnt", "GJ_button_01.png", 0.5f);
         auto applyBtn = CCMenuItemExt::createSpriteExtra(applyBtnSpr, [this](CCObject*) {
             applyModsAndRestart();
@@ -112,6 +120,24 @@ protected:
         m_mainLayer->addChild(applyMenu);
 
         return true;
+    }
+
+    void toggleAllMods() {
+        auto allMods = Loader::get()->getAllMods();
+        int enabledCount = 0;
+        for (Mod* mod : allMods) {
+            if (mod->isInternal()) continue;
+            if (m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled())
+                enabledCount++;
+        }
+
+        bool turnOn = enabledCount < (int)allMods.size() / 2; // majority check
+        for (Mod* mod : allMods) {
+            if (mod->isInternal()) continue;
+            m_modStates[mod->getID()] = turnOn;
+        }
+
+        refreshModList(); // update button text
     }
 
     void updateCurrentFileLabel() {
@@ -157,7 +183,7 @@ protected:
 
             auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.4f);
             auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
-                geode::openInfoPopup(mod->getID());
+                (void)geode::openInfoPopup(mod->getID());
             });
             viewBtn->setPosition({ 0.f, 0.f });
             menu->addChild(viewBtn);
@@ -183,16 +209,8 @@ protected:
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
-
             std::string key = "save_" + file + "_" + mod->getID();
-            bool checked;
-
-            if (m_modStates.count(mod->getID())) {
-                checked = m_modStates[mod->getID()];
-            } else {
-                checked = mod->isOrWillBeEnabled();
-            }
-
+            bool checked = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
             Mod::get()->setSavedValue(key, checked ? 1 : 0);
         }
     }
@@ -201,17 +219,12 @@ protected:
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
-
             bool enabled = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
-            if (enabled) {
-                (void)mod->enable();
-            } else {
-                (void)mod->disable();
-            }
+            if (enabled) (void)mod->enable();
+            else (void)mod->disable();
         }
-
-    geode::utils::game::restart(); // restart the game after applying changes
-}
+        geode::utils::game::restart(); // restart the game after applying changes
+    }
 
 public:
     static void showPopup() {
