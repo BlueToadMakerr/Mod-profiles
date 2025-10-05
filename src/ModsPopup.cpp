@@ -2,7 +2,7 @@
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
 #include <Geode/ui/GeodeUI.hpp> // for openInfoPopup
-#include "FileExplorer.cpp"
+#include "FileExplorer.cpp"      // your FileExplorerPopup
 
 using namespace geode::prelude;
 
@@ -42,7 +42,7 @@ protected:
         });
         m_mainLayer->addChild(m_searchInput);
 
-        // Buttons: Load, Save, Toggle All
+        // Load/Save buttons
         auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.3f);
         auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*) {
             FileExplorerPopup::show([this](const std::string& file) {
@@ -62,19 +62,19 @@ protected:
             });
         });
 
-        auto toggleAllSpr = ButtonSprite::create("Toggle All", "bigFont.fnt", "GJ_button_01.png", 0.3f);
-        auto toggleAllBtn = CCMenuItemExt::createSpriteExtra(toggleAllSpr, [this](CCObject*) {
+        auto toggleAllBtnSpr = ButtonSprite::create("Toggle All", "bigFont.fnt", "GJ_button_01.png", 0.3f);
+        auto toggleAllBtn = CCMenuItemExt::createSpriteExtra(toggleAllBtnSpr, [this](CCObject*) {
             toggleAllMods();
         });
 
         auto menu = CCMenu::create();
-        menu->setPosition({ widthCS - 50.f, heightCS - 50.f });
-        loadBtn->setPositionX(-95.f);
-        saveBtn->setPositionX(-50.f);
-        toggleAllBtn->setPositionX(10.f);
+        menu->setPosition({ widthCS - 80.f, heightCS - 50.f });
         menu->addChild(loadBtn);
+        loadBtn->setPositionX(-60.f);
         menu->addChild(saveBtn);
+        saveBtn->setPositionX(-20.f);
         menu->addChild(toggleAllBtn);
+        toggleAllBtn->setPositionX(40.f);
         m_mainLayer->addChild(menu);
 
         // Current file label
@@ -109,7 +109,7 @@ protected:
 
         refreshModList();
 
-        // Apply button (bottom center)
+        // Apply button
         auto applyBtnSpr = ButtonSprite::create("Apply & Restart", "bigFont.fnt", "GJ_button_01.png", 0.5f);
         auto applyBtn = CCMenuItemExt::createSpriteExtra(applyBtnSpr, [this](CCObject*) {
             applyModsAndRestart();
@@ -119,24 +119,6 @@ protected:
         m_mainLayer->addChild(applyMenu);
 
         return true;
-    }
-
-    void toggleAllMods() {
-        auto allMods = Loader::get()->getAllMods();
-        int enabledCount = 0;
-        for (Mod* mod : allMods) {
-            if (mod->isInternal()) continue;
-            if (m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled())
-                enabledCount++;
-        }
-
-        bool turnOn = enabledCount < (int)allMods.size() / 2; // majority check
-        for (Mod* mod : allMods) {
-            if (mod->isInternal()) continue;
-            m_modStates[mod->getID()] = turnOn;
-        }
-
-        refreshModList(); // update button text
     }
 
     void updateCurrentFileLabel() {
@@ -172,10 +154,22 @@ protected:
 
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
+
             auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
-            auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, modID, toggleBtnSpr](CCObject*) {
+            auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, mod, modID, toggleBtnSpr](CCObject*) {
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
+
+                // Special rule for "dulak.denabler"
+                if (mod->getID() == "dulak.denabler") {
+                    bool disableSelf = mod->getSettingValue<bool>("disable-self");
+                    if (disableSelf) {
+                        if (m_modStates[modID])
+                            (void)mod->enable();
+                        else
+                            (void)mod->disable();
+                    }
+                }
             });
             toggleBtn->setPosition({ -65.f, 0.f });
             menu->addChild(toggleBtn);
@@ -208,20 +202,56 @@ protected:
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
+
             std::string key = "save_" + file + "_" + mod->getID();
             bool checked = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
             Mod::get()->setSavedValue(key, checked ? 1 : 0);
         }
     }
 
+    void toggleAllMods() {
+        bool newState = false;
+
+        // Check if most mods are enabled or disabled
+        int enabledCount = 0;
+        auto allMods = Loader::get()->getAllMods();
+        for (Mod* mod : allMods)
+            if (m_modStates[mod->getID()] || mod->isOrWillBeEnabled()) enabledCount++;
+
+        newState = enabledCount < (int)allMods.size() / 2; // if mostly on, turn off
+
+        for (Mod* mod : allMods) {
+            if (mod->isInternal()) continue;
+
+            m_modStates[mod->getID()] = newState;
+
+            // Handle self-disable logic for dulak.denabler
+            if (mod->getID() == "dulak.denabler") {
+                bool disableSelf = mod->getSettingValue<bool>("disable-self");
+                if (disableSelf) {
+                    if (newState)
+                        (void)mod->enable();
+                    else
+                        (void)mod->disable();
+                }
+            }
+        }
+
+        refreshModList();
+    }
+
     void applyModsAndRestart() {
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
+
             bool enabled = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
-            if (enabled) (void)mod->enable();
-            else (void)mod->disable();
+            if (enabled)
+                (void)mod->enable();
+            else
+                (void)mod->disable();
         }
+
         geode::utils::game::restart(); // restart the game after applying changes
     }
 
