@@ -2,7 +2,6 @@
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
 #include <Geode/ui/GeodeUI.hpp> // for openInfoPopup
-#include <Geode/utils/game.hpp> // for restart()
 #include "FileExplorer.cpp"
 
 using namespace geode::prelude;
