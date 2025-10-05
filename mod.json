@@ -19,7 +19,7 @@
 		"disable-self": {
 			"type": "bool",
 			"name": "Also Disable Denabler",
-			"description": "When disabling all mods, also disable Denabler itself (you won't be able to enable mods again until you manually re-enable Denabler)",
+			"description": "When toggling all mods, also disable Denabler itself (you won't be able to use this mod again until you manually re-enable Denabler)",
 			"default": false
 		}
 	}
