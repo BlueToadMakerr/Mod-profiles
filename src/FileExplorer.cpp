@@ -61,19 +61,20 @@ protected:
         scrollBG->setOpacity(100);
         m_mainLayer->addChild(scrollBG);
 
+        // --- FIXED SCROLL SYSTEM (copied from ModsPopup) ---
+        auto scrollLayerLayout = ColumnLayout::create()
+            ->setAxisAlignment(AxisAlignment::Start)
+            ->setAutoGrowAxis(scrollSize.height - 12.5f)
+            ->setGrowCrossAxis(false)
+            ->setGap(5.f);
+
         m_scrollLayer = ScrollLayer::create({ scrollSize.width - 12.5f, scrollSize.height - 12.5f });
         m_scrollLayer->setAnchorPoint({ 0.5f, 0.5f });
         m_scrollLayer->ignoreAnchorPointForPosition(false);
         m_scrollLayer->setPosition(scrollBG->getPosition());
-
-        // Column layout (keeps spacing but doesn’t resize items)
-        m_scrollLayer->m_contentLayer->setLayout(
-            ColumnLayout::create()
-                ->setGap(5.f)
-                ->setAxisReverse(true)
-        );
-
+        m_scrollLayer->m_contentLayer->setLayout(scrollLayerLayout);
         m_mainLayer->addChild(m_scrollLayer);
+        // ---------------------------------------------------
 
         refreshFileList();
         return true;
@@ -97,9 +98,8 @@ protected:
         }
 
         for (auto& file : files) {
-            // Fixed item size (no scaling with scroll size)
             auto item = CCNode::create();
-            item->setContentSize({ 320.f, 30.f });
+            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 30.f });
 
             // File label
             auto label = CCLabelBMFont::create(file.c_str(), "bigFont.fnt");
@@ -120,7 +120,7 @@ protected:
             selectMenu->addChild(selectBtn);
             item->addChild(selectMenu);
 
-            // Delete button (trash icon)
+            // Delete button
             auto deleteMenu = CCMenu::create();
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
 
@@ -132,8 +132,6 @@ protected:
                         refreshFileList();
                     }
                 });
-
-                // Swap Yes/No (first button = No, second = Yes)
                 FLAlertLayer::create(
                     delegate,
                     "Confirm Delete",
@@ -150,7 +148,7 @@ protected:
         }
 
         // Update layout and scroll
-        m_scrollLayer->m_contentLayer->updateLayout();
+        m_scrollLayer->m_contentLayer->updateLayout(true);
         m_scrollLayer->scrollToTop();
     }
 
