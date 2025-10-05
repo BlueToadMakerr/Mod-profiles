@@ -9,7 +9,7 @@ using namespace geode::prelude;
 class ModsPopup : public Popup<> {
 protected:
     ScrollLayer* m_scrollLayer = nullptr;
-    TextInput* m_searchInput = nullptr;
+    TextInput* m_search_input = nullptr;
     CCLabelBMFont* m_currentFileLabel = nullptr;
 
     std::string m_searchQuery;
@@ -34,15 +34,15 @@ protected:
         m_mainLayer->addChild(searchBG);
 
         // Search input
-        m_searchInput = TextInput::create(widthCS - 120.f, "Search mods...");
-        m_searchInput->setPosition({ searchBG->getPositionX() - 40.f, searchBG->getPositionY() });
-        m_searchInput->setCallback([this](const std::string& query) {
+        m_search_input = TextInput::create(widthCS - 120.f, "Search mods...");
+        m_search_input->setPosition({ searchBG->getPositionX() - 40.f, searchBG->getPositionY() });
+        m_search_input->setCallback([this](const std::string& query) {
             m_searchQuery = query;
             refreshModList();
         });
-        m_mainLayer->addChild(m_searchInput);
+        m_mainLayer->addChild(m_search_input);
 
-        // Load/Save buttons
+        // Buttons: Load, Save, Toggle All
         auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.3f);
         auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*) {
             FileExplorerPopup::show([this](const std::string& file) {
@@ -62,19 +62,19 @@ protected:
             });
         });
 
-        auto toggleAllBtnSpr = ButtonSprite::create("Toggle All", "bigFont.fnt", "GJ_button_01.png", 0.3f);
-        auto toggleAllBtn = CCMenuItemExt::createSpriteExtra(toggleAllBtnSpr, [this](CCObject*) {
+        auto toggleAllSpr = ButtonSprite::create("Toggle All", "bigFont.fnt", "GJ_button_01.png", 0.3f);
+        auto toggleAllBtn = CCMenuItemExt::createSpriteExtra(toggleAllSpr, [this](CCObject*) {
             toggleAllMods();
         });
 
         auto menu = CCMenu::create();
-        menu->setPosition({ widthCS - 80.f, heightCS - 50.f });
-        menu->addChild(loadBtn);
+        menu->setPosition({ widthCS - 50.f, heightCS - 50.f });
         loadBtn->setPositionX(-60.f);
-        menu->addChild(saveBtn);
-        saveBtn->setPositionX(-20.f);
-        menu->addChild(toggleAllBtn);
+        saveBtn->setPositionX(-10.f);
         toggleAllBtn->setPositionX(40.f);
+        menu->addChild(loadBtn);
+        menu->addChild(saveBtn);
+        menu->addChild(toggleAllBtn);
         m_mainLayer->addChild(menu);
 
         // Current file label
@@ -100,16 +100,16 @@ protected:
             ->setGrowCrossAxis(false)
             ->setGap(5.f);
 
-        m_scrollLayer = ScrollLayer::create({ scrollSize.width - 12.5f, scrollSize.height - 12.5f });
-        m_scrollLayer->setAnchorPoint({ 0.5f, 0.5f });
-        m_scrollLayer->ignoreAnchorPointForPosition(false);
-        m_scrollLayer->setPosition(scrollBG->getPosition());
-        m_scrollLayer->m_contentLayer->setLayout(scrollLayerLayout);
-        m_mainLayer->addChild(m_scrollLayer);
+        m_scroll_layer = ScrollLayer::create({ scrollSize.width - 12.5f, scrollSize.height - 12.5f });
+        m_scroll_layer->setAnchorPoint({ 0.5f, 0.5f });
+        m_scroll_layer->ignoreAnchorPointForPosition(false);
+        m_scroll_layer->setPosition(scrollBG->getPosition());
+        m_scroll_layer->m_contentLayer->setLayout(scrollLayerLayout);
+        m_mainLayer->addChild(m_scroll_layer);
 
         refreshModList();
 
-        // Apply button
+        // Apply button (bottom center)
         auto applyBtnSpr = ButtonSprite::create("Apply & Restart", "bigFont.fnt", "GJ_button_01.png", 0.5f);
         auto applyBtn = CCMenuItemExt::createSpriteExtra(applyBtnSpr, [this](CCObject*) {
             applyModsAndRestart();
@@ -127,7 +127,7 @@ protected:
     }
 
     void refreshModList() {
-        m_scrollLayer->m_contentLayer->removeAllChildren();
+        m_scroll_layer->m_contentLayer->removeAllChildren();
 
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
@@ -141,7 +141,7 @@ protected:
             }
 
             auto item = CCNode::create();
-            item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 40.f });
+            item->setContentSize({ m_scroll_layer->getScaledContentWidth(), 40.f });
 
             auto label = CCLabelBMFont::create(mod->getName().c_str(), "bigFont.fnt");
             label->setScale(0.5f);
@@ -153,23 +153,29 @@ protected:
             menu->setPosition({ item->getContentSize().width - 35.f, item->getContentSize().height / 2 });
 
             std::string modID = mod->getID();
+
+            // get current checked state (fall back to actual mod state if not present)
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
 
             auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
             auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, mod, modID, toggleBtnSpr](CCObject*) {
-                m_modStates[modID] = !m_modStates[modID];
-                toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
+                // compute current value (don't create map entry accidentally by using operator[])
+                bool current = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
+                bool newState = !current;
 
-                // Special rule for "dulak.denabler"
+                // Special rule for dulak.denabler:
+                // If this mod's setting "disable-self" is false, we MUST keep it enabled.
                 if (mod->getID() == "dulak.denabler") {
                     bool disableSelf = mod->getSettingValue<bool>("disable-self");
-                    if (disableSelf) {
-                        if (m_modStates[modID])
-                            (void)mod->enable();
-                        else
-                            (void)mod->disable();
+                    if (!disableSelf) {
+                        // force enabled and don't allow disabling
+                        newState = true;
                     }
+                    // if disableSelf == true, allow toggling normally (newState remains flipped)
                 }
+
+                m_modStates[modID] = newState;
+                toggleBtnSpr->setString(newState ? "Enabled" : "Disabled");
             });
             toggleBtn->setPosition({ -65.f, 0.f });
             menu->addChild(toggleBtn);
@@ -182,11 +188,11 @@ protected:
             menu->addChild(viewBtn);
 
             item->addChild(menu);
-            m_scrollLayer->m_contentLayer->addChild(item);
+            m_scroll_layer->m_contentLayer->addChild(item);
         }
 
-        m_scrollLayer->m_contentLayer->updateLayout(true);
-        m_scrollLayer->scrollToTop();
+        m_scroll_layer->m_contentLayer->updateLayout(true);
+        m_scroll_layer->scrollToTop();
     }
 
     void loadFile(const std::string& file) {
@@ -202,7 +208,6 @@ protected:
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
-
             std::string key = "save_" + file + "_" + mod->getID();
             bool checked = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
             Mod::get()->setSavedValue(key, checked ? 1 : 0);
@@ -210,31 +215,33 @@ protected:
     }
 
     void toggleAllMods() {
-        bool newState = false;
-
-        // Check if most mods are enabled or disabled
-        int enabledCount = 0;
         auto allMods = Loader::get()->getAllMods();
-        for (Mod* mod : allMods)
-            if (m_modStates[mod->getID()] || mod->isOrWillBeEnabled()) enabledCount++;
 
-        newState = enabledCount < (int)allMods.size() / 2; // if mostly on, turn off
+        int enabledCount = 0;
+        int totalCount = 0;
+        for (Mod* mod : allMods) {
+            if (mod->isInternal()) continue;
+            totalCount++;
+            if (m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled())
+                enabledCount++;
+        }
+
+        bool turnOn = enabledCount < (totalCount / 2);
 
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
 
-            m_modStates[mod->getID()] = newState;
-
-            // Handle self-disable logic for dulak.denabler
+            // For dulak.denabler, only toggle if its "disable-self" setting allows it.
             if (mod->getID() == "dulak.denabler") {
                 bool disableSelf = mod->getSettingValue<bool>("disable-self");
-                if (disableSelf) {
-                    if (newState)
-                        (void)mod->enable();
-                    else
-                        (void)mod->disable();
+                if (!disableSelf) {
+                    // force keep enabled
+                    m_modStates[mod->getID()] = true;
+                    continue;
                 }
             }
+
+            m_modStates[mod->getID()] = turnOn;
         }
 
         refreshModList();
@@ -245,11 +252,18 @@ protected:
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
 
-            bool enabled = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
-            if (enabled)
-                (void)mod->enable();
-            else
-                (void)mod->disable();
+            bool shouldEnable = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
+
+            // Special-case dulak.denabler: if "disable-self" is false, always enable it.
+            if (mod->getID() == "dulak.denabler") {
+                bool disableSelf = mod->getSettingValue<bool>("disable-self");
+                if (!disableSelf) {
+                    shouldEnable = true;
+                }
+            }
+
+            if (shouldEnable) (void)mod->enable();
+            else (void)mod->disable();
         }
 
         geode::utils::game::restart(); // restart the game after applying changes
