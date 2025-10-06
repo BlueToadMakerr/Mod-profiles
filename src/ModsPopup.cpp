@@ -34,8 +34,8 @@ protected:
         m_mainLayer->addChild(searchBG);
 
         // Search input
-        m_searchInput = TextInput::create(widthCS - 140.f, "Search mods...");
-        m_searchInput->setPosition({ searchBG->getPositionX() - 60.f, searchBG->getPositionY() });
+        m_searchInput = TextInput::create(widthCS - 240.f, "Search mods...");
+        m_searchInput->setPosition({ searchBG->getPositionX() - 80.f, searchBG->getPositionY() });
         m_searchInput->setCallback([this](const std::string& query) {
             m_searchQuery = query;
             refreshModList();
