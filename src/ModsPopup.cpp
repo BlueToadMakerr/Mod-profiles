@@ -31,7 +31,7 @@ protected:
         searchBG->setColor({ 0, 0, 0 });
         searchBG->setOpacity(100);
         searchBG->setPosition({ widthCS / 2.f, heightCS - 50.f });
-        searchBG->setVisible(False);
+        searchBG->setVisible(false);
         m_mainLayer->addChild(searchBG);
 
         // Search input
