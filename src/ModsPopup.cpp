@@ -227,15 +227,10 @@ protected:
     }
 
     void toggleAllMods() {
-        bool newState = false;
+        static bool s_allModsEnabled = true; // default: assume all enabled
+        s_allModsEnabled = !s_allModsEnabled; // flip on each button press
 
-        int enabledCount = 0;
         auto allMods = Loader::get()->getAllMods();
-        for (Mod* mod : allMods)
-            if (m_modStates[mod->getID()] || mod->isOrWillBeEnabled()) enabledCount++;
-
-        newState = enabledCount < (int)allMods.size() / 2;
-
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
             std::string id = mod->getID();
@@ -246,9 +241,9 @@ protected:
                 continue;
             }
 
-            m_modStates[id] = newState;
+            m_modStates[id] = s_allModsEnabled;
             if (id == "dulak.denabler" && disableSelf) {
-                if (newState) (void)mod->enable();
+                if (s_allModsEnabled) (void)mod->enable();
                 else (void)mod->disable();
             }
         }
