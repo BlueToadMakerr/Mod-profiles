@@ -34,15 +34,15 @@ protected:
         m_mainLayer->addChild(searchBG);
 
         // Search input
-        m_searchInput = TextInput::create(widthCS - 120.f, "Search mods...");
-        m_searchInput->setPosition({ searchBG->getPositionX() - 40.f, searchBG->getPositionY() });
+        m_searchInput = TextInput::create(widthCS - 100.f, "Search mods...");
+        m_searchInput->setPosition({ searchBG->getPositionX() - 60.f, searchBG->getPositionY() });
         m_searchInput->setCallback([this](const std::string& query) {
             m_searchQuery = query;
             refreshModList();
         });
         m_mainLayer->addChild(m_searchInput);
 
-        // Load/Save/Toggle buttons
+        // Load/Save buttons
         auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.3f);
         auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*) {
             FileExplorerPopup::show([this](const std::string& file) {
@@ -70,11 +70,11 @@ protected:
         auto menu = CCMenu::create();
         menu->setPosition({ widthCS - 80.f, heightCS - 50.f });
         menu->addChild(loadBtn);
-        loadBtn->setPositionX(-90.f);
+        loadBtn->setPositionX(-60.f);
         menu->addChild(saveBtn);
-        saveBtn->setPositionX(-45.f);
+        saveBtn->setPositionX(-20.f);
         menu->addChild(toggleAllBtn);
-        toggleAllBtn->setPositionX(15.f);
+        toggleAllBtn->setPositionX(40.f);
         m_mainLayer->addChild(menu);
 
         // Current file label
@@ -155,35 +155,20 @@ protected:
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
 
-            // Always force dulak.denabler to be enabled if disable-self = false
-            if (modID == "dulak.denabler") {
-                bool disableSelf = mod->getSettingValue<bool>("disable-self");
-                if (!disableSelf) {
-                    checked = true;
-                    m_modStates[modID] = true;
-                }
-            }
-
             auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
             auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, mod, modID, toggleBtnSpr](CCObject*) {
-                bool disableSelf = mod->getSettingValue<bool>("disable-self");
-
-                if (modID == "dulak.denabler" && !disableSelf) {
-                    // Always keep enabled, ignore toggle
-                    m_modStates[modID] = true;
-                    toggleBtnSpr->setString("Enabled");
-                    return;
-                }
-
-                // Normal toggle
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
 
-                if (modID == "dulak.denabler" && disableSelf) {
-                    if (m_modStates[modID])
-                        (void)mod->enable();
-                    else
-                        (void)mod->disable();
+                // Special rule for "dulak.denabler"
+                if (mod->getID() == "dulak.denabler") {
+                    bool disableSelf = mod->getSettingValue<bool>("disable-self");
+                    if (disableSelf) {
+                        if (m_modStates[modID])
+                            (void)mod->enable();
+                        else
+                            (void)mod->disable();
+                    }
                 }
             });
             toggleBtn->setPosition({ -65.f, 0.f });
@@ -220,7 +205,6 @@ protected:
 
             std::string key = "save_" + file + "_" + mod->getID();
             bool checked = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
-
             Mod::get()->setSavedValue(key, checked ? 1 : 0);
         }
     }
@@ -228,27 +212,28 @@ protected:
     void toggleAllMods() {
         bool newState = false;
 
+        // Check if most mods are enabled or disabled
         int enabledCount = 0;
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods)
             if (m_modStates[mod->getID()] || mod->isOrWillBeEnabled()) enabledCount++;
 
-        newState = enabledCount < (int)allMods.size() / 2;
+        newState = enabledCount < (int)allMods.size() / 2; // if mostly on, turn off
 
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
-            std::string id = mod->getID();
-            bool disableSelf = mod->getSettingValue<bool>("disable-self");
 
-            if (id == "dulak.denabler" && !disableSelf) {
-                m_modStates[id] = true; // always keep enabled
-                continue;
-            }
+            m_modStates[mod->getID()] = newState;
 
-            m_modStates[id] = newState;
-            if (id == "dulak.denabler" && disableSelf) {
-                if (newState) (void)mod->enable();
-                else (void)mod->disable();
+            // Handle self-disable logic for dulak.denabler
+            if (mod->getID() == "dulak.denabler") {
+                bool disableSelf = mod->getSettingValue<bool>("disable-self");
+                if (disableSelf) {
+                    if (newState)
+                        (void)mod->enable();
+                    else
+                        (void)mod->disable();
+                }
             }
         }
 
@@ -261,21 +246,13 @@ protected:
             if (mod->isInternal()) continue;
 
             bool enabled = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
-
-            if (mod->getID() == "dulak.denabler") {
-                bool disableSelf = mod->getSettingValue<bool>("disable-self");
-                if (!disableSelf) {
-                    enabled = true;
-                }
-            }
-
             if (enabled)
                 (void)mod->enable();
             else
                 (void)mod->disable();
         }
 
-        geode::utils::game::restart();
+        geode::utils::game::restart(); // restart the game after applying changes
     }
 
 public:
