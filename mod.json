@@ -6,20 +6,20 @@
 		"mac": "2.2074",
 		"ios": "2.2074"
 	},
-	"id": "dulak.denabler",
-	"name": "Denabler",
-	"version": "v1.0.22",
-	"developer": "Dulak",
-	"description": "Bulk enable/disable all mods at once",
+	"id": "bluetoadmaker.modprofiles",
+	"name": "Mod profiles",
+	"version": "v1.0.0",
+	"developer": "BlueToadMaker",
+	"description": "Save and load mod configurations",
 	"links": {
-		"source": "https://github.com/dulakgg/Denabler"
+		"source": "https://github.com/BlueToadMakerr/Mod-profiles"
 	},
-	"tags": ["utility", "interface", "enhancement"],
+	"tags": ["utility", "interface", "enhancement", "offline"],
 	"settings": {
 		"disable-self": {
 			"type": "bool",
-			"name": "Also Disable Denabler",
-			"description": "When toggling all mods, also disable Denabler itself (you won't be able to use this mod again until you manually re-enable Denabler)",
+			"name": "Also Disable Mod Profiles",
+			"description": "When toggling all mods, also disable this mod itself (you won't be able to use this mod again until you manually re-enable Mod profiles)",
 			"default": false
 		}
 	}
