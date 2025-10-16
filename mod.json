@@ -12,7 +12,8 @@
 	"developer": "BlueToadMaker",
 	"description": "Save and load mod configurations",
 	"links": {
-		"source": "https://github.com/BlueToadMakerr/Mod-profiles"
+		"source": "https://github.com/BlueToadMakerr/Mod-profiles",
+  "community": "https://discord.gg/k5UYBrXP6f"
 	},
 	"tags": ["utility", "interface", "enhancement", "offline"],
 	"settings": {
