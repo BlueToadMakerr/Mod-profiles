@@ -1,4 +1,1 @@
-if you want to support my journey <3 
-https://ko-fi.com/dulakgg
-contact me on discord:
-dulakgg
+Please support me at https://ko-fi.com/bluetoadmaker This helps a ton :3
