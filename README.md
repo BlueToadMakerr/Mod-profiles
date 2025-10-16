@@ -5,3 +5,4 @@ Do you have 200 mods installed? Do you want to quickly enable and disable mods b
 ## How to use
 Click the button and enable/disable your mods (Your current mod status is always loaded when you open the mod) and save them. You can now do whatever you want with the mods and load them later. You can save as many configurations as you want
 
+Thanks to [@dulakgg](https://github.com/dulakgg) for the mod idea and the original mod denabler
