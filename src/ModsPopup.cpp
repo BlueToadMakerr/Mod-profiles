@@ -1,8 +1,8 @@
 #include <Geode/Geode.hpp>
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
-#include <Geode/ui/GeodeUI.hpp> // for openInfoPopup
-#include "FileExplorer.cpp"      // your FileExplorerPopup
+#include <Geode/ui/GeodeUI.hpp>
+#include "FileExplorer.cpp"
 
 using namespace geode::prelude;
 
@@ -156,8 +156,8 @@ protected:
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
 
-            // Always force dulak.denabler to be enabled if disable-self = false
-            if (modID == "dulak.denabler") {
+            // Always force the mod to be enabled if disable-self = false
+            if (modID == "bluetoadmaker.modprofiles") {
                 bool disableSelf = mod->getSettingValue<bool>("disable-self");
                 if (!disableSelf) {
                     checked = true;
@@ -169,7 +169,7 @@ protected:
             auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, mod, modID, toggleBtnSpr](CCObject*) {
                 bool disableSelf = mod->getSettingValue<bool>("disable-self");
 
-                if (modID == "dulak.denabler" && !disableSelf) {
+                if (modID == "bluetoadmaker.modprofiles" && !disableSelf) {
                     // Always keep enabled, ignore toggle
                     m_modStates[modID] = true;
                     toggleBtnSpr->setString("Enabled");
@@ -180,7 +180,7 @@ protected:
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
 
-                if (modID == "dulak.denabler" && disableSelf) {
+                if (modID == "bluetoadmaker.modprofiles" && disableSelf) {
                     if (m_modStates[modID])
                         (void)mod->enable();
                     else
@@ -236,13 +236,13 @@ protected:
             std::string id = mod->getID();
             bool disableSelf = mod->getSettingValue<bool>("disable-self");
 
-            if (id == "dulak.denabler" && !disableSelf) {
+            if (id == "bluetoadmaker.modprofiles" && !disableSelf) {
                 m_modStates[id] = true; // always keep enabled
                 continue;
             }
 
             m_modStates[id] = s_allModsEnabled;
-            if (id == "dulak.denabler" && disableSelf) {
+            if (id == "bluetoadmaker.modprofiles" && disableSelf) {
                 if (s_allModsEnabled) (void)mod->enable();
                 else (void)mod->disable();
             }
@@ -258,7 +258,7 @@ protected:
 
             bool enabled = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
 
-            if (mod->getID() == "dulak.denabler") {
+            if (mod->getID() == "bluetoadmaker.modprofiles") {
                 bool disableSelf = mod->getSettingValue<bool>("disable-self");
                 if (!disableSelf) {
                     enabled = true;
