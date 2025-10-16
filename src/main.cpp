@@ -5,38 +5,49 @@
 using namespace geode::prelude;
 
 class $modify(MyMenuLayer, MenuLayer) {
-bool init() {
-log::info("MyMenuLayer: init called");
+    bool init() {
+        log::info("MyMenuLayer: init called");
 
-if (!MenuLayer::init()) {  
-        log::info("MyMenuLayer: MenuLayer::init failed");  
-        return false;  
-    }  
+        if (!MenuLayer::init()) {
+            log::info("MyMenuLayer: MenuLayer::init failed");
+            return false;
+        }
 
-    log::info("MyMenuLayer: creating mods button");  
+        log::info("MyMenuLayer: creating mods button");
 
-    auto myButton = CCMenuItemSpriteExtra::create(    
-        CCSprite::createWithSpriteFrameName("GJ_optionsBtn02_001.png"),    
-        this,    
-        menu_selector(MyMenuLayer::onMyButton)    
-    );    
+        auto circle = CircleButtonSprite::create(
+            CCSprite::create("textures/button.png"),
+            CircleBaseColor::Green,
+            CircleBaseSize::MediumAlt
+        );
 
-    auto menu = this->getChildByID("bottom-menu");    
-    if (!menu) log::info("MyMenuLayer: bottom-menu node not found");    
-    else log::info("MyMenuLayer: bottom-menu found, adding button");  
+        if (auto inner = circle->getChildByType<CCSprite>(0)) {
+            inner->setScale(0.85f);
+        }
 
-    menu->addChild(myButton);    
-    myButton->setID("mods-button"_spr);    
+        auto myButton = CCMenuItemSpriteExtra::create(
+            circle,
+            this,
+            menu_selector(MyMenuLayer::onMyButton)
+        );
 
-    menu->updateLayout();    
-    log::info("MyMenuLayer: button added and layout updated");  
+        auto menu = this->getChildByID("bottom-menu");
+        if (!menu)
+            log::info("MyMenuLayer: bottom-menu node not found");
+        else
+            log::info("MyMenuLayer: bottom-menu found, adding button");
 
-    return true;    
-}    
+        menu->addChild(myButton);
+        myButton->setID("mods-button"_spr);
 
-void onMyButton(CCObject*) {    
-    log::info("MyMenuLayer: mods button pressed");    
-    ModsPopup::showPopup();    
-}
+        menu->updateLayout();
+        log::info("MyMenuLayer: button added and layout updated");
 
+        return true;
+    }
+
+    void onMyButton(CCObject*) {
+        log::info("MyMenuLayer: mods button pressed");
+        ModsPopup::showPopup();
+    }
 };
