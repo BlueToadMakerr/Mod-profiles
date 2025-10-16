@@ -112,6 +112,7 @@ protected:
             auto selectMenu = CCMenu::create();
             selectMenu->setPosition({ item->getContentSize().width - 90.f, item->getContentSize().height / 2 });
             auto selectBtnSpr = ButtonSprite::create("Select", "bigFont.fnt", "GJ_button_01.png", 0.5f);
+            selectBtnSpr->setScale(0.6f);
             auto selectBtn = CCMenuItemExt::createSpriteExtra(selectBtnSpr, [this, file](CCObject*) {
                 m_selectedFile = file;
                 if (m_callback) m_callback(m_selectedFile);
@@ -125,6 +126,7 @@ protected:
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
 
             auto trashSprite = CCSprite::createWithSpriteFrameName("GJ_trashBtn_001.png");
+            trashSprite->setScale(0.8f);
             auto deleteBtn = CCMenuItemExt::createSpriteExtra(trashSprite, [this, file](CCObject*) {
                 auto delegate = new ConfirmDeleteDelegate([this, file](bool yes) {
                     if (yes) {
