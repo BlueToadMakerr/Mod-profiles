@@ -16,7 +16,7 @@ class $modify(MyMenuLayer, MenuLayer) {
         log::info("MyMenuLayer: creating mods button");
 
         auto circle = CircleButtonSprite::create(
-            CCSprite::create("textures/button.png"),
+            CCSprite::create("button.png"),
             CircleBaseColor::Green,
             CircleBaseSize::MediumAlt
         );
