@@ -1,4 +1,4 @@
- #include <Geode/Geode.hpp>
+#include <Geode/Geode.hpp>
 #include <Geode/modify/MenuLayer.hpp>
 #include "ModsPopup.cpp"
 
@@ -15,8 +15,9 @@ class $modify(MyMenuLayer, MenuLayer) {
 
         log::info("MyMenuLayer: creating mods button");
 
-        auto circle = CircleButtonSprite::create(
-            CCSprite::createWithSprite("button.png"_spr),
+        auto circle = CircleButtonSprite::createWithSprite(
+            "button.png"_spr,
+            0.85f,
             CircleBaseColor::Green,
             CircleBaseSize::MediumAlt
         );
