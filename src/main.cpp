@@ -23,7 +23,7 @@ class $modify(MyMenuLayer, MenuLayer) {
         );
 
         if (auto inner = circle->getChildByType<CCSprite>(0)) {
-            inner->setScale(0.85f);
+            inner->setScale(0.4f);
         }
 
         auto myButton = CCMenuItemSpriteExtra::create(
