@@ -68,7 +68,7 @@ protected:
             toggleAllMods();
         });
 
-        auto menu = CCMenu::createWithArray(CCArray::create(loadBtn, saveBtn, toggleAllBtn, nullptr));
+        auto menu = CCMenu::create();
         menu->setPosition({ widthCS - 80.f, heightCS - 50.f });
         menu->addChild(loadBtn);
         loadBtn->setPositionX(-85.f);
@@ -115,7 +115,7 @@ protected:
         auto applyBtn = CCMenuItemExt::createSpriteExtra(applyBtnSpr, [this](CCObject*) {
             applyModsAndRestart();
         });
-        auto applyMenu = CCMenu::createWithItem(applyBtn);
+        auto applyMenu = CCMenu::create(applyBtn, nullptr);
         applyMenu->setPosition({ widthCS / 2.f, 20.f });
         m_mainLayer->addChild(applyMenu);
 
@@ -150,7 +150,7 @@ protected:
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
             item->addChild(label);
 
-            auto menu = CCMenu::createWithArray(CCArray::create(toggleBtn, viewBtn, nullptr));
+            auto menu = CCMenu::create();
             menu->setPosition({ item->getContentSize().width - 35.f, item->getContentSize().height / 2 });
 
             std::string modID = mod->getID();
