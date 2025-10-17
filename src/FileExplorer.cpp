@@ -112,7 +112,7 @@ protected:
             auto selectMenu = CCMenu::create();
             selectMenu->setPosition({ item->getContentSize().width - 90.f, item->getContentSize().height / 2 });
             auto selectBtnSpr = ButtonSprite::create("Select", "bigFont.fnt", "GJ_button_01.png", 0.5f);
-            selectBtnSpr->setScale(0.6f);
+            selectBtnSpr->setScale(0.7f);
             auto selectBtn = CCMenuItemExt::createSpriteExtra(selectBtnSpr, [this, file](CCObject*) {
                 m_selectedFile = file;
                 if (m_callback) m_callback(m_selectedFile);
