@@ -15,6 +15,11 @@
 		"source": "https://github.com/BlueToadMakerr/Mod-profiles",
   "community": "https://discord.gg/k5UYBrXP6f"
 	},
+  "resources": {
+    "sprites": [
+      "resources/button.png"
+    ]
+  },
 	"tags": ["utility", "interface", "enhancement", "offline"],
 	"settings": {
 		"disable-self": {
