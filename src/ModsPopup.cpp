@@ -115,7 +115,7 @@ protected:
         auto applyBtn = CCMenuItemExt::createSpriteExtra(applyBtnSpr, [this](CCObject*) {
             applyModsAndRestart();
         });
-        auto applyMenu = CCMenu::create(applyBtn, nullptr);
+        auto applyMenu = CCMenu::createWithItem(applyBtn);
         applyMenu->setPosition({ widthCS / 2.f, 20.f });
         m_mainLayer->addChild(applyMenu);
 
@@ -271,7 +271,7 @@ protected:
                 (void)mod->disable();
         }
 
-        geode::utils::game::restart();
+        geode::utils::game::restart(true);
     }
 
 public:
