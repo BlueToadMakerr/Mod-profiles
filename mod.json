@@ -8,7 +8,7 @@
 	},
 	"id": "bluetoadmaker.modprofiles",
 	"name": "Mod profiles",
-	"version": "v1.0.0",
+	"version": "v1.0.1",
 	"developer": "BlueToadMaker",
 	"description": "Save and load mod configurations",
 	"links": {
