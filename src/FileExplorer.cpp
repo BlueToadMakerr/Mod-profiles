@@ -38,12 +38,19 @@ protected:
         const float widthCS = 360.f;
         const float heightCS = 300.f;
 
-        // File name input
-        m_fileNameInput = TextInput::create(widthCS - 40.f, "New file name...");
-        m_fileNameInput->setPosition({ widthCS / 2.f, heightCS - 50.f });
+        // Create button sits to the right of the input on the same row.
+        // Reserve ~70px on the right for it, so shrink the input accordingly.
+        const float btnWidth = 70.f;
+        const float gap = 8.f;
+        const float inputWidth = widthCS - 40.f - btnWidth - gap;
+        const float rowY = heightCS - 50.f;
+
+        m_fileNameInput = TextInput::create(inputWidth, "New file name...");
+        // Anchor input to the left side of the row
+        m_fileNameInput->setPosition({ 20.f + inputWidth / 2.f, rowY });
         m_mainLayer->addChild(m_fileNameInput);
 
-        // Create button
+        // Create button — placed to the right of the input
         auto createBtnSpr = ButtonSprite::create("Create", "bigFont.fnt", "GJ_button_01.png", 0.5f);
         auto createBtn = CCMenuItemExt::createSpriteExtra(createBtnSpr, [this](CCObject*) {
             auto name = m_fileNameInput->getString();
@@ -55,12 +62,12 @@ protected:
             }
         });
         auto menu = CCMenu::create();
-        menu->setPosition({ widthCS / 2.f, heightCS - 90.f });
+        menu->setPosition({ 20.f + inputWidth + gap + btnWidth / 2.f, rowY });
         menu->addChild(createBtn);
         m_mainLayer->addChild(menu);
 
-        // Scroll area for existing files
-        auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 140.f };
+        // Scroll area — starts below the single input+button row
+        auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 90.f };
         auto scrollBG = CCScale9Sprite::create("square02b_001.png");
         scrollBG->setContentSize(scrollSize);
         scrollBG->setAnchorPoint({ 0.5f, 0.5f });
