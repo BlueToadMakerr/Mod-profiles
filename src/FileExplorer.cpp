@@ -16,18 +16,27 @@ public:
     }
 };
 
-class FileExplorerPopup : public Popup<> {
+class FileExplorerPopup : public Popup {
 protected:
     ScrollLayer* m_scrollLayer = nullptr;
     TextInput* m_fileNameInput = nullptr;
     std::string m_selectedFile;
     std::function<void(const std::string&)> m_callback;
 
-    bool setup() override {
-        setID("file-explorer"_spr);
-        setTitle("Select Save File");
+    bool init(std::function<void(const std::string&)> callback) {
+        if (!Popup::init(360.f, 300.f))
+            return false;
 
-        auto [widthCS, heightCS] = m_mainLayer->getScaledContentSize();
+        m_callback = callback;
+
+        this->setID("file-explorer"_spr);
+        this->setTitle("Select Save File");
+
+        // m_mainLayer is the correct content node in v5 — it is a child of the popup
+        // background, sized to the popup dimensions, with its origin at the popup's
+        // bottom-left corner. All child positions are relative to it.
+        const float widthCS = 360.f;
+        const float heightCS = 300.f;
 
         // File name input
         m_fileNameInput = TextInput::create(widthCS - 40.f, "New file name...");
@@ -61,20 +70,23 @@ protected:
         scrollBG->setOpacity(100);
         m_mainLayer->addChild(scrollBG);
 
-        // --- FIXED SCROLL SYSTEM (copied from ModsPopup) ---
         auto scrollLayerLayout = ColumnLayout::create()
             ->setAxisAlignment(AxisAlignment::Start)
             ->setAutoGrowAxis(scrollSize.height - 12.5f)
             ->setGrowCrossAxis(false)
             ->setGap(5.f);
 
-        m_scrollLayer = ScrollLayer::create({ scrollSize.width - 12.5f, scrollSize.height - 12.5f });
-        m_scrollLayer->setAnchorPoint({ 0.5f, 0.5f });
-        m_scrollLayer->ignoreAnchorPointForPosition(false);
-        m_scrollLayer->setPosition(scrollBG->getPosition());
+        auto scrollLayerSize = CCSize{ scrollSize.width - 12.5f, scrollSize.height - 12.5f };
+        m_scrollLayer = ScrollLayer::create(scrollLayerSize);
+        // ScrollLayer uses BL origin — derive its position from the scrollBG center.
+        m_scrollLayer->setAnchorPoint({ 0.f, 0.f });
+        m_scrollLayer->ignoreAnchorPointForPosition(true);
+        m_scrollLayer->setPosition({
+            scrollBG->getPositionX() - scrollLayerSize.width  / 2.f,
+            scrollBG->getPositionY() - scrollLayerSize.height / 2.f
+        });
         m_scrollLayer->m_contentLayer->setLayout(scrollLayerLayout);
         m_mainLayer->addChild(m_scrollLayer);
-        // ---------------------------------------------------
 
         refreshFileList();
         return true;
@@ -83,7 +95,6 @@ protected:
     void refreshFileList() {
         m_scrollLayer->m_contentLayer->removeAllChildren();
 
-        // Get save file list from mod saved data
         std::string filesStr = Mod::get()->getSavedValue<std::string>("save_files", "");
         std::vector<std::string> files;
         size_t pos = 0;
@@ -101,14 +112,12 @@ protected:
             auto item = CCNode::create();
             item->setContentSize({ m_scrollLayer->getScaledContentWidth(), 30.f });
 
-            // File label
             auto label = CCLabelBMFont::create(file.c_str(), "bigFont.fnt");
             label->setScale(0.5f);
             label->setAnchorPoint({ 0.f, 0.5f });
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
             item->addChild(label);
 
-            // Select button
             auto selectMenu = CCMenu::create();
             selectMenu->setPosition({ item->getContentSize().width - 90.f, item->getContentSize().height / 2 });
             auto selectBtnSpr = ButtonSprite::create("Select", "bigFont.fnt", "GJ_button_01.png", 0.5f);
@@ -121,10 +130,8 @@ protected:
             selectMenu->addChild(selectBtn);
             item->addChild(selectMenu);
 
-            // Delete button
             auto deleteMenu = CCMenu::create();
             deleteMenu->setPosition({ item->getContentSize().width - 40.f, item->getContentSize().height / 2 });
-
             auto trashSprite = CCSprite::createWithSpriteFrameName("GJ_trashBtn_001.png");
             trashSprite->setScale(0.8f);
             auto deleteBtn = CCMenuItemExt::createSpriteExtra(trashSprite, [this, file](CCObject*) {
@@ -142,14 +149,12 @@ protected:
                     "Yes"
                 )->show();
             });
-
             deleteMenu->addChild(deleteBtn);
             item->addChild(deleteMenu);
 
             m_scrollLayer->m_contentLayer->addChild(item);
         }
 
-        // Update layout and scroll
         m_scrollLayer->m_contentLayer->updateLayout(true);
         m_scrollLayer->scrollToTop();
     }
@@ -174,9 +179,7 @@ protected:
             files.push_back(filesStr.substr(pos, next - pos));
             pos = next + 1;
         }
-
         files.erase(std::remove(files.begin(), files.end(), name), files.end());
-
         std::string newFilesStr;
         for (size_t i = 0; i < files.size(); ++i) {
             if (i != 0) newFilesStr += ";";
@@ -186,12 +189,11 @@ protected:
     }
 
 public:
-    static void show(std::function<void(const std::string&)> callback) {
+    static void open(std::function<void(const std::string&)> callback) {
         auto popup = new FileExplorerPopup();
-        if (popup && popup->initAnchored(360.f, 300.f, "GJ_square01.png")) {
-            popup->m_callback = callback;
+        if (popup && popup->init(callback)) {
             popup->autorelease();
-            popup->Popup<>::show();
+            popup->show();
         } else {
             CC_SAFE_DELETE(popup);
         }
