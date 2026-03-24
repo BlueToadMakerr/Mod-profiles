@@ -13,8 +13,6 @@ class ModsPopup : public Popup {
 protected:
     ScrollLayer* m_scrollLayer = nullptr;
     TextInput* m_searchInput = nullptr;
-    CCLabelBMFont* m_currentFileLabel = nullptr;
-
     std::string m_searchQuery;
     std::string m_currentFile;
     std::map<std::string, bool> m_modStates;
@@ -23,9 +21,6 @@ protected:
         if (!Popup::init(400.f, 300.f))
             return false;
 
-        // m_mainLayer is the correct content node in v5 — it is a child of the popup
-        // background, sized to the popup dimensions, with its origin at the popup's
-        // bottom-left corner. All child positions are relative to it.
         const float widthCS = 400.f;
         const float heightCS = 300.f;
 
@@ -59,7 +54,6 @@ protected:
             FileExplorerPopup::open([this](const std::string& file) {
                 m_currentFile = file;
                 loadFile(file);
-                updateCurrentFileLabel();
                 refreshModList();
             });
         });
@@ -69,7 +63,6 @@ protected:
             FileExplorerPopup::open([this](const std::string& file) {
                 m_currentFile = file;
                 saveFile(file);
-                updateCurrentFileLabel();
             });
         });
 
@@ -88,19 +81,13 @@ protected:
         toggleAllBtn->setPositionX(20.f);
         m_mainLayer->addChild(menu);
 
-        // Current file label
-        m_currentFileLabel = CCLabelBMFont::create("No file selected", "bigFont.fnt");
-        m_currentFileLabel->setScale(0.5f);
-        m_currentFileLabel->setPosition({ widthCS / 2.f, heightCS - 90.f });
-        m_mainLayer->addChild(m_currentFileLabel);
-
-        // Scroll layer background
-        auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 140.f };
+        // Scroll layer background — leave ~50px at the bottom for the Apply & Restart button
+        auto scrollSize = CCSize{ widthCS - 17.5f, heightCS - 120.f };
         auto scrollBG = CCScale9Sprite::create("square02b_001.png");
         scrollBG->setContentSize(scrollSize);
         scrollBG->setAnchorPoint({ 0.5f, 0.5f });
         scrollBG->ignoreAnchorPointForPosition(false);
-        scrollBG->setPosition({ widthCS / 2.f, (heightCS / 2.f) - 30.f });
+        scrollBG->setPosition({ widthCS / 2.f, (heightCS / 2.f) - 15.f });
         scrollBG->setColor({ 0, 0, 0 });
         scrollBG->setOpacity(100);
         m_mainLayer->addChild(scrollBG);
@@ -135,11 +122,6 @@ protected:
         m_mainLayer->addChild(applyMenu);
 
         return true;
-    }
-
-    void updateCurrentFileLabel() {
-        std::string text = m_currentFile.empty() ? "No file selected" : ("File: " + m_currentFile);
-        m_currentFileLabel->setString(text.c_str());
     }
 
     void refreshModList() {
@@ -178,21 +160,24 @@ protected:
                 }
             }
 
-            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", "GJ_button_01.png", 0.4f);
+            auto toggleBtnSpr = ButtonSprite::create(checked ? "Enabled" : "Disabled", "bigFont.fnt", checked ? "GJ_button_01.png" : "GJ_button_06.png", 0.4f);
             auto toggleBtn = CCMenuItemExt::createSpriteExtra(toggleBtnSpr, [this, mod, modID, toggleBtnSpr](CCObject*) {
                 bool disableSelf = mod->getSettingValue<bool>("disable-self");
 
                 if (modID == "bluetoadmaker.modprofiles" && !disableSelf) {
                     m_modStates[modID] = true;
                     toggleBtnSpr->setString("Enabled");
+                    toggleBtnSpr->updateBGImage("GJ_button_01.png");
                     return;
                 }
 
                 m_modStates[modID] = !m_modStates[modID];
-                toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
+                bool nowEnabled = m_modStates[modID];
+                toggleBtnSpr->setString(nowEnabled ? "Enabled" : "Disabled");
+                toggleBtnSpr->updateBGImage(nowEnabled ? "GJ_button_01.png" : "GJ_button_06.png");
 
                 if (modID == "bluetoadmaker.modprofiles" && disableSelf) {
-                    if (m_modStates[modID])
+                    if (nowEnabled)
                         (void)mod->enable();
                     else
                         (void)mod->disable();
