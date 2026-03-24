@@ -2,11 +2,14 @@
 #include <Geode/loader/Loader.hpp>
 #include <Geode/loader/Mod.hpp>
 #include <Geode/ui/GeodeUI.hpp>
+#include <Geode/ui/Popup.hpp>
+#include <Geode/ui/TextInput.hpp>
+#include <Geode/ui/ScrollLayer.hpp>
 #include "FileExplorer.cpp"
 
 using namespace geode::prelude;
 
-class ModsPopup : public Popup<> {
+class ModsPopup : public Popup {
 protected:
     ScrollLayer* m_scrollLayer = nullptr;
     TextInput* m_searchInput = nullptr;
@@ -14,10 +17,17 @@ protected:
 
     std::string m_searchQuery;
     std::string m_currentFile;
-    std::map<std::string, bool> m_modStates; // modID -> checked state
+    std::map<std::string, bool> m_modStates;
 
-    bool setup() override {
-        auto [widthCS, heightCS] = m_mainLayer->getScaledContentSize();
+    bool init() {
+        if (!Popup::init(400.f, 300.f))
+            return false;
+
+        // m_mainLayer is the correct content node in v5 — it is a child of the popup
+        // background, sized to the popup dimensions, with its origin at the popup's
+        // bottom-left corner. All child positions are relative to it.
+        const float widthCS = 400.f;
+        const float heightCS = 300.f;
 
         // Title
         auto title = CCLabelBMFont::create("Installed Mods", "bigFont.fnt");
@@ -46,7 +56,7 @@ protected:
         // Load/Save/Toggle buttons
         auto loadBtnSpr = ButtonSprite::create("Load", "bigFont.fnt", "GJ_button_01.png", 0.3f);
         auto loadBtn = CCMenuItemExt::createSpriteExtra(loadBtnSpr, [this](CCObject*) {
-            FileExplorerPopup::show([this](const std::string& file) {
+            FileExplorerPopup::open([this](const std::string& file) {
                 m_currentFile = file;
                 loadFile(file);
                 updateCurrentFileLabel();
@@ -56,7 +66,7 @@ protected:
 
         auto saveBtnSpr = ButtonSprite::create("Save", "bigFont.fnt", "GJ_button_01.png", 0.3f);
         auto saveBtn = CCMenuItemExt::createSpriteExtra(saveBtnSpr, [this](CCObject*) {
-            FileExplorerPopup::show([this](const std::string& file) {
+            FileExplorerPopup::open([this](const std::string& file) {
                 m_currentFile = file;
                 saveFile(file);
                 updateCurrentFileLabel();
@@ -101,10 +111,15 @@ protected:
             ->setGrowCrossAxis(false)
             ->setGap(5.f);
 
-        m_scrollLayer = ScrollLayer::create({ scrollSize.width - 12.5f, scrollSize.height - 12.5f });
-        m_scrollLayer->setAnchorPoint({ 0.5f, 0.5f });
-        m_scrollLayer->ignoreAnchorPointForPosition(false);
-        m_scrollLayer->setPosition(scrollBG->getPosition());
+        auto scrollLayerSize = CCSize{ scrollSize.width - 12.5f, scrollSize.height - 12.5f };
+        m_scrollLayer = ScrollLayer::create(scrollLayerSize);
+        // ScrollLayer uses BL origin — derive its position from the scrollBG center.
+        m_scrollLayer->setAnchorPoint({ 0.f, 0.f });
+        m_scrollLayer->ignoreAnchorPointForPosition(true);
+        m_scrollLayer->setPosition({
+            scrollBG->getPositionX() - scrollLayerSize.width  / 2.f,
+            scrollBG->getPositionY() - scrollLayerSize.height / 2.f
+        });
         m_scrollLayer->m_contentLayer->setLayout(scrollLayerLayout);
         m_mainLayer->addChild(m_scrollLayer);
 
@@ -133,9 +148,8 @@ protected:
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
             if (!m_searchQuery.empty()) {
-                auto name = mod->getName();
-                auto lowerName = name;
-                auto lowerQuery = m_searchQuery;
+                std::string lowerName(mod->getName());
+                std::string lowerQuery = m_searchQuery;
                 std::transform(lowerName.begin(), lowerName.end(), lowerName.begin(), ::tolower);
                 std::transform(lowerQuery.begin(), lowerQuery.end(), lowerQuery.begin(), ::tolower);
                 if (lowerName.find(lowerQuery) == std::string::npos) continue;
@@ -150,13 +164,12 @@ protected:
             label->setPosition({ 5.f, item->getContentSize().height / 2 });
             item->addChild(label);
 
-            auto menu = CCMenu::create();
-            menu->setPosition({ item->getContentSize().width - 35.f, item->getContentSize().height / 2 });
+            auto itemMenu = CCMenu::create();
+            itemMenu->setPosition({ item->getContentSize().width - 35.f, item->getContentSize().height / 2 });
 
             std::string modID = mod->getID();
             bool checked = m_modStates.count(modID) ? m_modStates[modID] : mod->isOrWillBeEnabled();
 
-            // Always force the mod to be enabled if disable-self = false
             if (modID == "bluetoadmaker.modprofiles") {
                 bool disableSelf = mod->getSettingValue<bool>("disable-self");
                 if (!disableSelf) {
@@ -170,13 +183,11 @@ protected:
                 bool disableSelf = mod->getSettingValue<bool>("disable-self");
 
                 if (modID == "bluetoadmaker.modprofiles" && !disableSelf) {
-                    // Always keep enabled, ignore toggle
                     m_modStates[modID] = true;
                     toggleBtnSpr->setString("Enabled");
                     return;
                 }
 
-                // Normal toggle
                 m_modStates[modID] = !m_modStates[modID];
                 toggleBtnSpr->setString(m_modStates[modID] ? "Enabled" : "Disabled");
 
@@ -188,16 +199,16 @@ protected:
                 }
             });
             toggleBtn->setPosition({ -65.f, 0.f });
-            menu->addChild(toggleBtn);
+            itemMenu->addChild(toggleBtn);
 
             auto viewBtnSpr = ButtonSprite::create("View", "bigFont.fnt", "GJ_button_01.png", 0.4f);
             auto viewBtn = CCMenuItemExt::createSpriteExtra(viewBtnSpr, [mod](CCObject*) {
                 (void)geode::openInfoPopup(mod->getID());
             });
             viewBtn->setPosition({ 0.f, 0.f });
-            menu->addChild(viewBtn);
+            itemMenu->addChild(viewBtn);
 
-            item->addChild(menu);
+            item->addChild(itemMenu);
             m_scrollLayer->m_contentLayer->addChild(item);
         }
 
@@ -218,17 +229,15 @@ protected:
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
             if (mod->isInternal()) continue;
-
             std::string key = "save_" + file + "_" + mod->getID();
             bool checked = m_modStates.count(mod->getID()) ? m_modStates[mod->getID()] : mod->isOrWillBeEnabled();
-
             Mod::get()->setSavedValue(key, checked ? 1 : 0);
         }
     }
 
     void toggleAllMods() {
-        static bool s_allModsEnabled = true; // default: assume all enabled
-        s_allModsEnabled = !s_allModsEnabled; // flip on each button press
+        static bool s_allModsEnabled = true;
+        s_allModsEnabled = !s_allModsEnabled;
 
         auto allMods = Loader::get()->getAllMods();
         for (Mod* mod : allMods) {
@@ -237,7 +246,7 @@ protected:
             bool disableSelf = mod->getSettingValue<bool>("disable-self");
 
             if (id == "bluetoadmaker.modprofiles" && !disableSelf) {
-                m_modStates[id] = true; // always keep enabled
+                m_modStates[id] = true;
                 continue;
             }
 
@@ -260,9 +269,7 @@ protected:
 
             if (mod->getID() == "bluetoadmaker.modprofiles") {
                 bool disableSelf = mod->getSettingValue<bool>("disable-self");
-                if (!disableSelf) {
-                    enabled = true;
-                }
+                if (!disableSelf) enabled = true;
             }
 
             if (enabled)
@@ -276,17 +283,12 @@ protected:
 
 public:
     static void showPopup() {
-        auto popup = ModsPopup::create(400.f, 300.f, "GJ_square01.png");
-        if (popup) popup->show();
-    }
-
-    static ModsPopup* create(float width, float height, const char* spr) {
-        auto ret = new ModsPopup();
-        if (ret && ret->initAnchored(width, height, spr)) {
-            ret->autorelease();
-            return ret;
+        auto popup = new ModsPopup();
+        if (popup && popup->init()) {
+            popup->autorelease();
+            popup->show();
+        } else {
+            CC_SAFE_DELETE(popup);
         }
-        CC_SAFE_DELETE(ret);
-        return nullptr;
     }
 };
