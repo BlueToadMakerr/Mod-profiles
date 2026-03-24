@@ -1,32 +1,32 @@
 {
-	"geode": "4.9.0",
-	"gd": {
-		"win": "2.2074",
-		"android": "2.2074",
-		"mac": "2.2074",
-		"ios": "2.2074"
-	},
-	"id": "bluetoadmaker.modprofiles",
-	"name": "Mod profiles",
-	"version": "v1.0.1",
-	"developer": "BlueToadMaker",
-	"description": "Save and load mod configurations",
-	"links": {
-		"source": "https://github.com/BlueToadMakerr/Mod-profiles",
+        "geode": "5.4.1",
+        "gd": {
+                "win": "2.2081",
+                "android": "2.2081",
+                "mac": "2.2081",
+                "ios": "2.2081"
+        },
+        "id": "bluetoadmaker.modprofiles",
+        "name": "Mod profiles",
+        "version": "v1.0.2",
+        "developer": "BlueToadMaker",
+        "description": "Save and load mod configurations",
+        "links": {
+                "source": "https://github.com/BlueToadMakerr/Mod-profiles",
   "community": "https://discord.gg/k5UYBrXP6f"
-	},
+        },
   "resources": {
     "sprites": [
       "resources/button.png"
     ]
   },
-	"tags": ["utility", "interface", "enhancement", "offline"],
-	"settings": {
-		"disable-self": {
-			"type": "bool",
-			"name": "Also Disable Mod Profiles",
-			"description": "When toggling all mods, also disable this mod itself (you won't be able to use this mod again until you manually re-enable Mod profiles)",
-			"default": false
-		}
-	}
+        "tags": ["utility", "interface", "enhancement", "offline"],
+        "settings": {
+                "disable-self": {
+                        "type": "bool",
+                        "name": "Also Disable Mod Profiles",
+                        "description": "When toggling all mods, also disable this mod itself (you won't be able to use this mod again until you manually re-enable Mod profiles)",
+                        "default": false
+                }
+        }
 }
